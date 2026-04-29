@@ -508,6 +508,30 @@ def _auto_fulfill_order(order_id):
                    (f"CJ error: {result.get('message','')}", order_id))
     db.commit()
 
+# ── Admin AI Assistant ───────────────────────────────────────────────────────
+@app.route('/admin/ai')
+@login_required
+def admin_ai():
+    db = get_db()
+    stats = {
+        'products':  db.execute('SELECT COUNT(*) as c FROM products WHERE active=1').fetchone()['c'],
+        'orders':    db.execute('SELECT COUNT(*) as c FROM orders').fetchone()['c'],
+        'revenue':   db.execute('SELECT SUM(total) as s FROM orders WHERE status!="cancelled"').fetchone()['s'] or 0,
+        'pending':   db.execute('SELECT COUNT(*) as c FROM orders WHERE status="pending"').fetchone()['c'],
+    }
+    ai_configured = bool(get_setting('openrouter_key'))
+    quick_actions = [
+        ('💡 What products should I add?', 'What are the top 5 trending tech products I should add to my dropshipping store right now? Focus on keyboards, peripherals, and desk accessories under $60.'),
+        ('📝 Write product description', 'Write me a compelling product description for a mechanical keyboard. Make it 2-3 sentences, professional, with keywords buyers search for.'),
+        ('📈 Marketing email', 'Write me a short promotional email to send to customers. We have a sale on tech gear this week. Include subject line and body. Under 150 words.'),
+        ('💰 Pricing advice', 'What markup percentage should I use for keyboard and tech accessories from CJ Dropshipping? Consider shipping times and competition.'),
+        ('🔍 Find hot niches', 'What are 3 specific tech product niches that are trending right now with good profit margins for dropshipping? Include estimated margin.'),
+        ('📊 Analyze my business', f'I have {stats["products"]} products, {stats["orders"]} orders, and ${stats["revenue"]:.2f} in revenue with {stats["pending"]} pending orders. Give me 3 specific things I should do right now to grow.'),
+        ('🚀 Growth strategy', 'Give me a 30-day action plan to grow my tech dropshipping store. Be specific and prioritize by impact.'),
+        ('🛒 Reduce cart abandonment', 'What are the top 3 reasons customers abandon carts on tech dropshipping stores, and how do I fix each one?'),
+    ]
+    return render_template('admin/ai.html', stats=stats, ai_configured=ai_configured, quick_actions=quick_actions)
+
 # ── Admin Routes ──────────────────────────────────────────────────────────────
 @app.route('/login', methods=['GET','POST'])
 def login():

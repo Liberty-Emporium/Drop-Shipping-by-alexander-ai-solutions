@@ -46,6 +46,9 @@
     <a href="/admin/orders" class="nav-link {% if '/admin/orders' in request.path %}active{% endif %}">
       <i class="bi bi-bag me-2"></i>Orders
     </a>
+    <a href="/admin/ai" class="nav-link {% if '/admin/ai' in request.path %}active{% endif %}" style="color: {% if '/admin/ai' in request.path %}var(--primary){% else %}#b39ddb{% endif %};">
+      <i class="bi bi-robot me-2"></i>AI Assistant
+    </a>
     <a href="/admin/settings" class="nav-link {% if '/admin/settings' in request.path %}active{% endif %}">
       <i class="bi bi-gear me-2"></i>Settings
     </a>
