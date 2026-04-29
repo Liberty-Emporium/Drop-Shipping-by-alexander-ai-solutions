@@ -1,76 +1,184 @@
 {% extends 'base.html' %}
 {% block title %}Cart — {{ app_name }}{% endblock %}
+
+{% block head %}
+<style>
+.cart-page { padding: 2.5rem 0 5rem; max-width: 820px; margin: 0 auto; }
+.cart-title { font-family:'Space Grotesk',sans-serif; font-size:1.8rem; font-weight:700; margin-bottom:2rem; }
+
+/* Cart item */
+.cart-item {
+  display:flex; align-items:center; gap:1.25rem;
+  padding:1.25rem;
+  border-bottom:1px solid var(--border);
+}
+.cart-item:last-child { border-bottom:none; }
+.cart-thumb {
+  width:80px; height:80px; border-radius:10px;
+  background:var(--surface2); flex-shrink:0;
+  overflow:hidden; display:flex; align-items:center; justify-content:center;
+}
+.cart-thumb img { width:100%; height:100%; object-fit:cover; }
+.cart-info { flex:1; min-width:0; }
+.cart-name { font-weight:600; font-size:0.9rem; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cart-unit { color:var(--muted); font-size:0.82rem; margin-top:0.2rem; }
+.cart-controls { display:flex; align-items:center; gap:0.75rem; flex-shrink:0; }
+.cart-qty-wrap {
+  display:flex; align-items:center;
+  background:var(--surface2); border:1px solid var(--border); border-radius:8px; overflow:hidden;
+}
+.cart-qty-btn {
+  background:none; border:none; color:var(--text);
+  width:34px; height:34px; font-size:1rem; font-weight:700;
+  cursor:pointer; transition:background 0.15s;
+}
+.cart-qty-btn:hover { background:rgba(255,255,255,0.08); }
+.cart-qty-num {
+  width:38px; height:34px; background:none; border:none;
+  border-left:1px solid var(--border); border-right:1px solid var(--border);
+  color:var(--text); text-align:center; font-size:0.9rem; font-weight:600;
+}
+.cart-qty-num:focus { outline:none; }
+.cart-line-total { font-weight:700; font-size:1rem; min-width:60px; text-align:right; }
+.cart-remove {
+  background:none; border:1px solid rgba(239,68,68,0.25); color:rgba(239,68,68,0.7);
+  border-radius:8px; width:34px; height:34px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:0.85rem; transition:all 0.2s;
+}
+.cart-remove:hover { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.5); color:#f87171; }
+
+/* Summary card */
+.summary-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-top:1.25rem; }
+.summary-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; font-size:0.9rem; }
+.summary-row.total { font-size:1.1rem; font-weight:800; padding-top:0.75rem; border-top:1px solid var(--border); margin-top:0.5rem; }
+.summary-row.total span:last-child { background:linear-gradient(135deg,#7c3aed,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-size:1.4rem; }
+
+.btn-checkout {
+  display:block; width:100%;
+  background:linear-gradient(135deg,#7c3aed,#4f46e5);
+  color:white; border:none;
+  padding:0.9rem; border-radius:12px;
+  font-size:1rem; font-weight:700; text-align:center; text-decoration:none;
+  cursor:pointer; margin-top:1rem;
+  transition:transform 0.2s, box-shadow 0.2s;
+  box-shadow:0 0 30px rgba(124,58,237,0.3);
+}
+.btn-checkout:hover { transform:translateY(-2px); box-shadow:0 0 50px rgba(124,58,237,0.45); color:white; }
+
+.btn-continue {
+  display:block; width:100%; text-align:center; text-decoration:none;
+  color:var(--muted); font-size:0.88rem; margin-top:0.75rem;
+  padding:0.5rem; border-radius:8px;
+  transition:color 0.2s;
+}
+.btn-continue:hover { color:var(--text); }
+
+.upsell-bar {
+  background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2);
+  border-radius:10px; padding:0.6rem 1rem;
+  font-size:0.82rem; color:#67e8f9;
+  margin-bottom:1rem; text-align:center;
+}
+
+/* Empty state */
+.cart-empty { text-align:center; padding:5rem 1rem; }
+.cart-empty-icon { font-size:4rem; opacity:0.2; margin-bottom:1.25rem; }
+.btn-shop {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  background:linear-gradient(135deg,#7c3aed,#06b6d4);
+  color:white; border:none; border-radius:12px;
+  padding:0.75rem 2rem; font-size:0.95rem; font-weight:700;
+  text-decoration:none; margin-top:1.25rem;
+  transition:transform 0.2s; cursor:pointer;
+}
+.btn-shop:hover { transform:translateY(-2px); color:white; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5" style="max-width:800px;">
-  <h2 class="fw-bold mb-4"><i class="bi bi-bag text-primary"></i> Your Cart</h2>
+<div class="container cart-page">
+  <h1 class="cart-title">
+    <i class="bi bi-bag" style="background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>
+    Your Cart
+    {% if cart %}<span style="color:var(--muted);font-size:1rem;font-weight:400;"> · {{ cart|length }} item{{ 's' if cart|length != 1 }}</span>{% endif %}
+  </h1>
 
   {% if cart %}
-  <div class="card mb-4">
-    <div class="card-body p-0">
-      {% for item in cart %}
-      <div class="d-flex align-items-center gap-3 p-3 border-bottom" style="border-color:var(--border)!important;">
+
+  <!-- Cart items -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:0;">
+    {% for item in cart %}
+    <div class="cart-item">
+      <div class="cart-thumb">
         {% if item.image_url %}
-        <img src="{{ item.image_url }}" width="70" height="70" style="object-fit:cover; border-radius:8px;">
+        <img src="{{ item.image_url }}" alt="{{ item.name }}"
+             onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'bi bi-cpu\' style=\'color:rgba(255,255,255,0.15);font-size:1.5rem\'></i>'">
         {% else %}
-        <div style="width:70px;height:70px;background:#16213e;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-          <i class="bi bi-cpu text-muted"></i>
-        </div>
+        <i class="bi bi-cpu" style="color:rgba(255,255,255,0.15);font-size:1.5rem;"></i>
         {% endif %}
-        <div class="flex-grow-1">
-          <h6 class="mb-0">{{ item.name }}</h6>
-          <small style="color:var(--primary);">${{ '%.2f'|format(item.price) }} each</small>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <div class="input-group input-group-sm" style="width:110px;">
-            <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.product_id }}, {{ item.quantity - 1 }})">−</button>
-            <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly>
-            <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.product_id }}, {{ item.quantity + 1 }})">+</button>
-          </div>
-          <strong style="min-width:60px; text-align:right;">${{ '%.2f'|format(item.price * item.quantity) }}</strong>
-          <button class="btn btn-sm btn-outline-danger" onclick="removeCart({{ item.product_id }})">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
       </div>
-      {% endfor %}
+      <div class="cart-info">
+        <div class="cart-name">{{ item.name }}</div>
+        <div class="cart-unit">${{ '%.2f'|format(item.price) }} each</div>
+      </div>
+      <div class="cart-controls">
+        <div class="cart-qty-wrap">
+          <button class="cart-qty-btn" onclick="updateCart({{ item.product_id }}, {{ item.quantity - 1 }})">−</button>
+          <input type="text" class="cart-qty-num" value="{{ item.quantity }}" readonly>
+          <button class="cart-qty-btn" onclick="updateCart({{ item.product_id }}, {{ item.quantity + 1 }})">+</button>
+        </div>
+        <div class="cart-line-total">${{ '%.2f'|format(item.price * item.quantity) }}</div>
+        <button class="cart-remove" onclick="removeCart({{ item.product_id }})" title="Remove">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
     </div>
+    {% endfor %}
   </div>
 
   <!-- Summary -->
-  <div class="card">
-    <div class="card-body">
-      <div class="d-flex justify-content-between mb-2">
-        <span>Subtotal</span><strong>${{ '%.2f'|format(subtotal) }}</strong>
-      </div>
-      <div class="d-flex justify-content-between mb-3">
-        <span>Shipping</span>
-        <strong>{% if subtotal >= 50 %}<span class="text-success">Free</span>{% else %}$4.99{% endif %}</strong>
-      </div>
-      {% if subtotal < 50 %}
-      <div class="alert alert-info py-2 small mb-3">
-        <i class="bi bi-truck"></i> Add ${{ '%.2f'|format(50 - subtotal) }} more for free shipping!
-      </div>
-      {% endif %}
-      <div class="d-flex justify-content-between fs-5 fw-bold mb-3">
-        <span>Total</span>
-        <span style="color:var(--primary);">${{ '%.2f'|format(subtotal + (0 if subtotal >= 50 else 4.99)) }}</span>
-      </div>
-      <a href="/checkout" class="btn btn-primary w-100 btn-lg">
-        <i class="bi bi-lock"></i> Proceed to Checkout
-      </a>
-      <a href="/shop" class="btn btn-outline-secondary w-100 mt-2">Continue Shopping</a>
+  <div class="summary-card">
+    {% set total_with_ship = subtotal + (0 if subtotal >= 50 else 4.99) %}
+    {% if subtotal < 50 %}
+    <div class="upsell-bar">
+      <i class="bi bi-truck"></i> Add <strong>${{ '%.2f'|format(50 - subtotal) }}</strong> more for free shipping!
     </div>
+    {% endif %}
+
+    <div class="summary-row"><span style="color:var(--muted);">Subtotal</span><span>${{ '%.2f'|format(subtotal) }}</span></div>
+    <div class="summary-row">
+      <span style="color:var(--muted);">Shipping</span>
+      <span>{% if subtotal >= 50 %}<span style="color:#6ee7b7;font-weight:600;">Free</span>{% else %}$4.99{% endif %}</span>
+    </div>
+    <div class="summary-row total">
+      <span>Total</span>
+      <span>${{ '%.2f'|format(total_with_ship) }}</span>
+    </div>
+
+    <a href="/checkout" class="btn-checkout">
+      <i class="bi bi-lock-fill"></i> Secure Checkout — ${{ '%.2f'|format(total_with_ship) }}
+    </a>
+    <a href="/shop" class="btn-continue">← Continue Shopping</a>
   </div>
 
   {% else %}
-  <div class="text-center py-5">
-    <i class="bi bi-bag fs-1 text-muted mb-3 d-block"></i>
-    <h4 class="text-muted">Your cart is empty</h4>
-    <a href="/shop" class="btn btn-primary mt-3">Start Shopping</a>
+
+  <div class="cart-empty">
+    <div class="cart-empty-icon"><i class="bi bi-bag"></i></div>
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:700; margin-bottom:0.5rem;">Your cart is empty</h3>
+    <p style="color:var(--muted); max-width:340px; margin:0 auto;">
+      Looks like you haven't added anything yet. Browse the store to find your gear.
+    </p>
+    <a href="/shop" class="btn-shop">
+      <i class="bi bi-grid-3x3-gap"></i> Browse Products
+    </a>
   </div>
+
   {% endif %}
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script>
 async function updateCart(pid, qty) {

@@ -1,64 +1,117 @@
 {% extends 'base.html' %}
 {% block title %}Order Confirmed — {{ app_name }}{% endblock %}
+
+{% block head %}
+<style>
+.confirm-page { padding: 3rem 0 5rem; max-width: 620px; margin: 0 auto; text-align: center; }
+.confirm-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.1));
+  border: 2px solid rgba(16,185,129,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; margin: 0 auto 1.5rem;
+  box-shadow: 0 0 30px rgba(16,185,129,0.2);
+}
+.confirm-title { font-family:'Space Grotesk',sans-serif; font-size:2rem; font-weight:800; margin-bottom:0.5rem; }
+.confirm-sub { color:var(--muted); margin-bottom:2.5rem; }
+
+.info-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:1.5rem; text-align:left; }
+.info-card-head { padding:0.85rem 1.25rem; border-bottom:1px solid var(--border); font-weight:700; font-size:0.9rem; }
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; padding:1.25rem; }
+.info-cell small { display:block; color:var(--muted); font-size:0.78rem; margin-bottom:0.2rem; }
+.info-cell strong { font-size:0.92rem; }
+
+.order-item {
+  display:flex; align-items:center; gap:0.75rem;
+  padding:0.85rem 1.25rem; border-bottom:1px solid var(--border);
+  font-size:0.85rem; text-align:left;
+}
+.order-item:last-child { border-bottom:none; }
+.item-thumb {
+  width:48px; height:48px; border-radius:8px;
+  background:var(--surface2); flex-shrink:0; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.item-thumb img { width:100%; height:100%; object-fit:cover; }
+
+.btn-continue {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  background:linear-gradient(135deg,#7c3aed,#06b6d4);
+  color:white; border:none; border-radius:12px;
+  padding:0.85rem 2.5rem; font-size:0.95rem; font-weight:700;
+  text-decoration:none; margin-top:0.5rem;
+  transition:transform 0.2s;
+}
+.btn-continue:hover { transform:translateY(-2px); color:white; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5 text-center" style="max-width:600px;">
-  <div class="mb-4">
-    <i class="bi bi-check-circle-fill text-success" style="font-size:4rem;"></i>
-  </div>
-  <h2 class="fw-bold mb-2">Order Placed! 🎉</h2>
-  <p class="text-muted mb-4">Thank you, {{ order.customer_name.split()[0] }}! Your order is confirmed.</p>
-
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row g-3 text-start">
-        <div class="col-6">
-          <small class="text-muted d-block">Order Number</small>
-          <strong style="color:var(--primary);">{{ order.order_num }}</strong>
-        </div>
-        <div class="col-6">
-          <small class="text-muted d-block">Status</small>
-          <span class="badge bg-warning text-dark">{{ order.status.replace('_',' ').title() }}</span>
-        </div>
-        <div class="col-6">
-          <small class="text-muted d-block">Total</small>
-          <strong>${{ '%.2f'|format(order.total) }}</strong>
-        </div>
-        <div class="col-6">
-          <small class="text-muted d-block">Email</small>
-          <small>{{ order.customer_email }}</small>
-        </div>
-        {% if order.tracking_number %}
-        <div class="col-12">
-          <small class="text-muted d-block">Tracking</small>
-          <strong class="text-success">{{ order.tracking_number }}</strong>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <h6 class="fw-bold mb-3">Items Ordered</h6>
-  <div class="card mb-4">
-    <div class="card-body p-0">
-      {% for item in items %}
-      <div class="d-flex align-items-center gap-2 p-3 border-bottom" style="border-color:var(--border)!important;">
-        {% if item.image_url %}
-        <img src="{{ item.image_url }}" width="45" height="45" style="object-fit:cover;border-radius:6px;">
-        {% endif %}
-        <div class="flex-grow-1 text-start">
-          <small>{{ item.name }}</small><br>
-          <small class="text-muted">Qty: {{ item.quantity }}</small>
-        </div>
-        <small class="fw-bold">${{ '%.2f'|format(item.price * item.quantity) }}</small>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <p class="text-muted small mb-4">
-    A confirmation will be sent to <strong>{{ order.customer_email }}</strong> once your order ships.
+<div class="container confirm-page">
+  <div class="confirm-icon">✅</div>
+  <h1 class="confirm-title">Order Placed! 🎉</h1>
+  <p class="confirm-sub">
+    Thanks, {{ order.customer_name.split()[0] }}! Your order is confirmed and will be fulfilled automatically.
   </p>
 
-  <a href="/shop" class="btn btn-primary px-5">Continue Shopping</a>
+  <!-- Order details -->
+  <div class="info-card">
+    <div class="info-card-head"><i class="bi bi-receipt" style="color:#7c3aed;"></i> Order Details</div>
+    <div class="info-grid">
+      <div class="info-cell">
+        <small>Order Number</small>
+        <strong style="background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">{{ order.order_num }}</strong>
+      </div>
+      <div class="info-cell">
+        <small>Status</small>
+        <strong style="color:#fcd34d;">{{ order.status.replace('_',' ').title() }}</strong>
+      </div>
+      <div class="info-cell">
+        <small>Total</small>
+        <strong>${{ '%.2f'|format(order.total) }}</strong>
+      </div>
+      <div class="info-cell">
+        <small>Confirmation sent to</small>
+        <strong style="font-size:0.82rem;">{{ order.customer_email }}</strong>
+      </div>
+      {% if order.tracking_number %}
+      <div class="info-cell" style="grid-column:1/-1;">
+        <small>Tracking Number</small>
+        <strong style="color:#6ee7b7;font-size:1rem;">{{ order.tracking_number }}</strong>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="info-card">
+    <div class="info-card-head"><i class="bi bi-box-seam" style="color:#7c3aed;"></i> Items Ordered</div>
+    {% for item in items %}
+    <div class="order-item">
+      <div class="item-thumb">
+        {% if item.image_url %}
+        <img src="{{ item.image_url }}" alt="{{ item.name }}"
+             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'bi bi-cpu\' style=\'color:rgba(255,255,255,0.15);\'></i>'">
+        {% else %}
+        <i class="bi bi-cpu" style="color:rgba(255,255,255,0.15);"></i>
+        {% endif %}
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:500;">{{ item.name[:50] }}{% if item.name|length > 50 %}...{% endif %}</div>
+        <div style="color:var(--muted); font-size:0.78rem;">Qty: {{ item.quantity }} × ${{ '%.2f'|format(item.price) }}</div>
+      </div>
+      <div style="font-weight:700;">${{ '%.2f'|format(item.price * item.quantity) }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1.5rem;">
+    <i class="bi bi-robot" style="color:#7c3aed;"></i>
+    Your order has been sent to CJ Dropshipping for auto-fulfillment. You'll receive tracking info by email once it ships.
+  </p>
+
+  <a href="/shop" class="btn-continue">
+    <i class="bi bi-grid-3x3-gap"></i> Continue Shopping
+  </a>
 </div>
 {% endblock %}

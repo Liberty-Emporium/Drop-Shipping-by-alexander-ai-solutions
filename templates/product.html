@@ -1,88 +1,231 @@
 {% extends 'base.html' %}
 {% block title %}{{ product.name }} — {{ app_name }}{% endblock %}
+
+{% block head %}
+<style>
+.product-page { padding: 2rem 0 5rem; }
+
+/* Breadcrumb */
+.breadcrumb { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:2.5rem; font-size:0.82rem; color:var(--muted); }
+.breadcrumb a { color:var(--muted); text-decoration:none; transition:color 0.2s; }
+.breadcrumb a:hover { color:var(--accent2); }
+.breadcrumb-sep { opacity:0.4; }
+
+/* Layout */
+.product-layout { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:start; }
+@media(max-width:768px){ .product-layout { grid-template-columns:1fr; gap:2rem; } }
+
+/* Image */
+.product-image-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  display:flex; align-items:center; justify-content:center;
+  position: relative;
+}
+.product-image-wrap img {
+  width:100%; height:100%; object-fit:contain;
+  padding: 1.5rem;
+}
+.product-image-placeholder {
+  font-size:5rem; color:rgba(255,255,255,0.08);
+}
+
+/* Info */
+.prod-category {
+  display:inline-block;
+  font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  background: rgba(124,58,237,0.15); color:#c4b5fd;
+  border: 1px solid rgba(124,58,237,0.25);
+  padding: 0.25rem 0.75rem; border-radius: 999px;
+  margin-bottom: 0.75rem;
+}
+.prod-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700; line-height: 1.25;
+  margin-bottom: 1.25rem;
+  color: var(--text);
+}
+.prod-price {
+  font-size: 2.2rem; font-weight: 800;
+  background: linear-gradient(135deg,#7c3aed,#06b6d4);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 0.25rem;
+}
+.prod-shipping {
+  font-size: 0.85rem; color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.free-ship { color:#6ee7b7; font-weight:600; }
+
+/* Description */
+.prod-desc {
+  color:var(--muted); font-size:0.9rem; line-height:1.7;
+  margin-bottom:1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius:12px; padding:1rem 1.25rem;
+}
+
+/* Qty selector */
+.qty-wrap { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; }
+.qty-control {
+  display:flex; align-items:center;
+  background: var(--surface2); border:1px solid var(--border); border-radius:10px;
+  overflow:hidden;
+}
+.qty-btn {
+  background:none; border:none; color:var(--text);
+  width:40px; height:42px;
+  font-size:1.2rem; cursor:pointer; font-weight:700;
+  transition: background 0.2s;
+}
+.qty-btn:hover { background: rgba(255,255,255,0.08); }
+.qty-num {
+  width:44px; height:42px;
+  background:none; border:none; color:var(--text);
+  text-align:center; font-size:1rem; font-weight:600;
+  border-left:1px solid var(--border); border-right:1px solid var(--border);
+}
+.qty-num:focus { outline:none; }
+
+.btn-atc-full {
+  flex:1;
+  background: linear-gradient(135deg,#7c3aed,#4f46e5);
+  color:white; border:none;
+  padding:0.85rem 2rem; border-radius:12px;
+  font-size:1rem; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 0 30px rgba(124,58,237,0.35);
+}
+.btn-atc-full:hover { transform:translateY(-2px); box-shadow:0 0 50px rgba(124,58,237,0.5); }
+.btn-atc-full:disabled { opacity:0.6; transform:none; cursor:not-allowed; }
+
+/* Trust badges */
+.trust-row {
+  display:flex; flex-wrap:wrap; gap:0.75rem;
+  padding-top:1.5rem;
+  border-top:1px solid var(--border);
+  margin-top:1.5rem;
+}
+.trust-badge {
+  display:flex; align-items:center; gap:0.4rem;
+  font-size:0.8rem; color:var(--muted);
+}
+.trust-icon { color:#7c3aed; font-size:1rem; }
+
+/* Related */
+.related-section { padding-top:4rem; border-top:1px solid var(--border); margin-top:4rem; }
+.related-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1.25rem; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-  <nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/" class="text-primary">Home</a></li>
-      <li class="breadcrumb-item"><a href="/shop" class="text-primary">Shop</a></li>
-      {% if product.category %}
-      <li class="breadcrumb-item"><a href="/shop?category={{ product.category }}" class="text-primary">{{ product.category }}</a></li>
-      {% endif %}
-      <li class="breadcrumb-item active text-muted">{{ product.name[:40] }}...</li>
-    </ol>
+<div class="container product-page">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="/">Home</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="/shop">Shop</a>
+    {% if product.category %}
+    <span class="breadcrumb-sep">›</span>
+    <a href="/shop?category={{ product.category }}">{{ product.category }}</a>
+    {% endif %}
+    <span class="breadcrumb-sep">›</span>
+    <span style="color:var(--text);">{{ product.name[:45] }}{% if product.name|length > 45 %}...{% endif %}</span>
   </nav>
 
-  <div class="row g-5">
+  <!-- Main layout -->
+  <div class="product-layout">
+
     <!-- Image -->
-    <div class="col-md-5">
-      {% if product.image_url %}
-      <img src="{{ product.image_url }}" class="w-100 rounded-3" style="max-height:450px; object-fit:contain; background:var(--card-bg); padding:1rem;" alt="{{ product.name }}">
-      {% else %}
-      <div class="w-100 rounded-3 d-flex align-items-center justify-content-center" style="height:400px; background:var(--card-bg);">
-        <i class="bi bi-cpu" style="font-size:5rem; color:#444;"></i>
+    <div>
+      <div class="product-image-wrap">
+        {% if product.image_url %}
+        <img src="{{ product.image_url }}" alt="{{ product.name }}"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <div class="product-image-placeholder" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">
+          <i class="bi bi-cpu"></i>
+        </div>
+        {% else %}
+        <div class="product-image-placeholder">
+          <i class="bi bi-cpu"></i>
+        </div>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
 
     <!-- Details -->
-    <div class="col-md-7">
+    <div>
       {% if product.category %}
-      <span class="badge mb-2" style="background:var(--primary);">{{ product.category }}</span>
+      <div class="prod-category">{{ product.category }}</div>
       {% endif %}
-      <h1 class="fw-bold mb-2" style="font-size:1.8rem;">{{ product.name }}</h1>
-      <div class="mb-3">
-        <span class="fs-2 fw-bold" style="color:var(--primary);">${{ '%.2f'|format(product.price) }}</span>
+
+      <h1 class="prod-name">{{ product.name }}</h1>
+
+      <div class="prod-price">${{ '%.2f'|format(product.price) }}</div>
+      <div class="prod-shipping">
         {% if product.price >= 50 %}
-        <span class="badge bg-success ms-2">Free Shipping</span>
+        <span class="free-ship"><i class="bi bi-truck"></i> Free Shipping</span>
         {% else %}
-        <span class="text-muted ms-2 small">+ $4.99 shipping</span>
+        <i class="bi bi-truck"></i> + $4.99 shipping
         {% endif %}
       </div>
 
       {% if product.description %}
-      <p class="text-muted mb-4">{{ product.description }}</p>
+      <div class="prod-desc">{{ product.description }}</div>
       {% endif %}
 
-      <!-- Qty + Add to cart -->
-      <div class="d-flex align-items-center gap-3 mb-4">
-        <div class="input-group" style="max-width:120px;">
-          <button class="btn btn-outline-secondary" onclick="changeQty(-1)">−</button>
-          <input type="number" id="qty" value="1" min="1" max="99" class="form-control text-center">
-          <button class="btn btn-outline-secondary" onclick="changeQty(1)">+</button>
+      <!-- Qty + Add to Cart -->
+      <div class="qty-wrap">
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <input type="number" id="qty" class="qty-num" value="1" min="1" max="99">
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
         </div>
-        <button id="atc-btn" class="btn btn-primary btn-lg px-4" onclick="addToCartQty({{ product.id }})">
+        <button id="atc-btn" class="btn-atc-full" onclick="addToCartQty({{ product.id }})">
           <i class="bi bi-bag-plus"></i> Add to Cart
         </button>
       </div>
 
-      <!-- Trust signals -->
-      <div class="d-flex flex-wrap gap-3" style="color:#888; font-size:0.85rem;">
-        <span><i class="bi bi-shield-check text-primary"></i> Secure checkout</span>
-        <span><i class="bi bi-truck text-primary"></i> Ships from supplier</span>
-        <span><i class="bi bi-arrow-counterclockwise text-primary"></i> 30-day returns</span>
+      <!-- Trust badges -->
+      <div class="trust-row">
+        <div class="trust-badge"><i class="bi bi-shield-check trust-icon"></i> Secure checkout</div>
+        <div class="trust-badge"><i class="bi bi-box-seam trust-icon"></i> Ships from supplier</div>
+        <div class="trust-badge"><i class="bi bi-arrow-counterclockwise trust-icon"></i> 30-day returns</div>
+        <div class="trust-badge"><i class="bi bi-robot trust-icon"></i> AI auto-fulfilled</div>
       </div>
     </div>
   </div>
 
-  <!-- Related -->
+  <!-- Related Products -->
   {% if related %}
-  <div class="mt-5">
-    <h4 class="fw-bold mb-4">You might also like</h4>
-    <div class="row g-4">
+  <div class="related-section">
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:700; margin-bottom:1.5rem;">
+      You might also like
+    </h3>
+    <div class="related-grid">
       {% for p in related %}
-      <div class="col-6 col-md-3">
-        <div class="card product-card h-100" onclick="window.location='/product/{{ p.id }}'">
-          {% if p.image_url %}
-          <img src="{{ p.image_url }}" class="product-img w-100" alt="{{ p.name }}" loading="lazy">
-          {% else %}
-          <div class="product-img w-100 d-flex align-items-center justify-content-center">
-            <i class="bi bi-cpu fs-2 text-muted"></i>
-          </div>
-          {% endif %}
-          <div class="card-body">
-            <h6 class="mb-1">{{ p.name }}</h6>
-            <span style="color:var(--primary);">${{ '%.2f'|format(p.price) }}</span>
+      <div class="card" style="cursor:pointer;" onclick="window.location='/product/{{ p.id }}'">
+        {% if p.image_url %}
+        <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-img" loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="product-img-placeholder" style="display:none;"><i class="bi bi-cpu"></i></div>
+        {% else %}
+        <div class="product-img-placeholder"><i class="bi bi-cpu"></i></div>
+        {% endif %}
+        <div class="card-body">
+          <div class="product-name">{{ p.name[:55] }}{% if p.name|length > 55 %}...{% endif %}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+            <div class="product-price">${{ '%.2f'|format(p.price) }}</div>
+            <button class="btn-atc" onclick="event.stopPropagation(); addToCart({{ p.id }}, 1, this)">
+              <i class="bi bi-bag-plus"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -90,36 +233,49 @@
     </div>
   </div>
   {% endif %}
+
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script>
 function changeQty(delta) {
   const input = document.getElementById('qty');
-  const v = Math.max(1, Math.min(99, parseInt(input.value||1) + delta));
-  input.value = v;
+  input.value = Math.max(1, Math.min(99, parseInt(input.value || 1) + delta));
 }
-function addToCartQty(pid) {
+
+async function addToCartQty(pid) {
   const qty = parseInt(document.getElementById('qty').value || 1);
   const btn = document.getElementById('atc-btn');
-  btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...';
-  fetch('/api/cart/add', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({product_id: pid, quantity: qty})
-  }).then(r=>r.json()).then(d=>{
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...';
+  try {
+    const r = await fetch('/api/cart/add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({product_id: pid, quantity: qty})
+    });
+    const d = await r.json();
     if (d.success) {
-      btn.innerHTML = '<i class="bi bi-check2"></i> Added!';
-      btn.classList.add('btn-success'); btn.classList.remove('btn-primary');
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Added to Cart!';
+      btn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+      btn.style.boxShadow = '0 0 30px rgba(16,185,129,0.4)';
       const badge = document.getElementById('cart-badge');
-      if (badge) badge.textContent = d.cart_count;
-      setTimeout(()=>{
+      if (badge) { badge.textContent = d.cart_count; badge.style.display = 'flex'; }
+      setTimeout(() => {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-bag-plus"></i> Add to Cart';
-        btn.classList.remove('btn-success'); btn.classList.add('btn-primary');
-      }, 2000);
-    } else { btn.disabled = false; btn.textContent = 'Add to Cart'; }
-  });
+        btn.style.background = '';
+        btn.style.boxShadow = '';
+      }, 2200);
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-bag-plus"></i> Add to Cart';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-bag-plus"></i> Add to Cart';
+  }
 }
 </script>
 {% endblock %}
