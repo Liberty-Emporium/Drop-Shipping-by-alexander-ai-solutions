@@ -167,7 +167,9 @@ def get_setting(key, default=''):
     if val: return val
     val = get_config(key)
     if val: return val
-    return os.environ.get(key.upper(), default)
+    # Check env var (e.g. cj_api_key -> CJ_API_KEY)
+    env_val = os.environ.get(key.upper(), os.environ.get(key, default))
+    return env_val
 
 # ── CSRF ──────────────────────────────────────────────────────────────────────
 def get_csrf_token():
