@@ -7,25 +7,71 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    :root { --primary: #6c63ff; --dark: #0f0f1a; --sidebar: #13132b; --border: rgba(108,99,255,0.2); }
-    body { background: var(--dark); color: #e0e0e0; }
+    :root { --primary: #7c6fff; --dark: #0c0c18; --sidebar: #101020; --border: rgba(150,140,255,0.18); }
+
+    body { background: var(--dark); color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    /* ── SIDEBAR ── */
     .sidebar { background: var(--sidebar); border-right: 1px solid var(--border); min-height: 100vh; width: 220px; position: fixed; top:0; left:0; z-index:100; }
-    .sidebar .nav-link { color: #aaa; padding: 0.6rem 1.2rem; border-radius: 8px; margin: 2px 8px; }
-    .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(108,99,255,0.15); color: var(--primary); }
-    .sidebar .brand { color: var(--primary); font-weight: 700; padding: 1.2rem; border-bottom: 1px solid var(--border); }
+    .sidebar .nav-link { color: #c0bfd8; padding: 0.6rem 1.2rem; border-radius: 8px; margin: 2px 8px; font-size:0.88rem; font-weight:500; transition: all 0.15s; }
+    .sidebar .nav-link:hover { background: rgba(124,111,255,0.12); color: #fff; }
+    .sidebar .nav-link.active { background: rgba(124,111,255,0.2); color: #a89dff; }
+    .sidebar .brand { color: #a89dff; font-weight: 800; font-size:1.05rem; padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border); letter-spacing:0.01em; }
+
+    /* ── MAIN ── */
     .main-content { margin-left: 220px; padding: 2rem; }
-    .card { background: #1a1a2e; border: 1px solid var(--border); border-radius: 12px; }
-    .card-header { background: rgba(108,99,255,0.1); border-bottom: 1px solid var(--border); }
+
+    /* ── CARDS ── */
+    .card { background: #16162a; border: 1px solid var(--border); border-radius: 12px; }
+    .card-header { background: rgba(124,111,255,0.08); border-bottom: 1px solid var(--border); padding: 0.85rem 1.25rem; color: #dddcf0; font-size:0.9rem; }
+
+    /* ── STAT CARDS ── */
     .stat-card { border-left: 3px solid var(--primary); }
-    .stat-val { font-size: 2rem; font-weight: 800; color: var(--primary); }
-    .table { color: #e0e0e0; }
-    .badge-status-pending    { background: rgba(255,193,7,0.2);  color: #ffc107; border: 1px solid #ffc10750; }
-    .badge-status-processing { background: rgba(13,110,253,0.2); color: #6ea8fe; border: 1px solid #6ea8fe50; }
-    .badge-status-shipped    { background: rgba(25,135,84,0.2);  color: #75b798; border: 1px solid #75b79850; }
-    .badge-status-delivered  { background: rgba(25,135,84,0.4);  color: #a3cfbb; border: 1px solid #a3cfbb50; }
-    .badge-status-cancelled  { background: rgba(220,53,69,0.2);  color: #ea868f; border: 1px solid #ea868f50; }
-    input, select, textarea { background: #16213e !important; border-color: var(--border) !important; color: #e0e0e0 !important; }
-    input:focus, select:focus { box-shadow: 0 0 0 0.2rem rgba(108,99,255,0.25) !important; }
+    .stat-card small { color: #a0a0c0 !important; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 0.4rem; }
+    .stat-val { font-size: 2.2rem; font-weight: 800; color: #a89dff; line-height: 1; }
+
+    /* ── QUICK LINK CARDS ── */
+    .card strong { color: #e8e8f0; font-size: 0.9rem; display: block; margin-top: 0.4rem; }
+    .card small.text-muted { color: #8888aa !important; font-size: 0.78rem; }
+
+    /* ── TABLES ── */
+    .table { color: #d8d8ec; }
+    .table thead th { color: #9090b8; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; border-color: var(--border); font-weight:600; padding:0.65rem 0.75rem; }
+    .table td { border-color: rgba(150,140,255,0.1); padding:0.7rem 0.75rem; vertical-align:middle; }
+    .table-hover tbody tr:hover td { background: rgba(124,111,255,0.06); }
+
+    /* ── BADGES ── */
+    .badge-status-pending    { background: rgba(255,193,7,0.15);  color: #ffd55a; border: 1px solid rgba(255,193,7,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.75rem; font-weight:600; }
+    .badge-status-processing { background: rgba(99,179,237,0.15); color: #90cdf4; border: 1px solid rgba(99,179,237,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.75rem; font-weight:600; }
+    .badge-status-shipped    { background: rgba(72,187,120,0.15); color: #9ae6b4; border: 1px solid rgba(72,187,120,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.75rem; font-weight:600; }
+    .badge-status-delivered  { background: rgba(72,187,120,0.25); color: #c6f6d5; border: 1px solid rgba(72,187,120,0.4); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.75rem; font-weight:600; }
+    .badge-status-cancelled  { background: rgba(245,101,101,0.15); color: #feb2b2; border: 1px solid rgba(245,101,101,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.75rem; font-weight:600; }
+
+    /* ── FORMS ── */
+    input, select, textarea { background: #0e0e1e !important; border: 1px solid rgba(150,140,255,0.25) !important; color: #e8e8f0 !important; border-radius: 8px; padding: 0.5rem 0.85rem; }
+    input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 0.2rem rgba(124,111,255,0.2) !important; border-color: rgba(124,111,255,0.5) !important; outline:none; }
+    input::placeholder, textarea::placeholder { color: #5a5a7a !important; }
+    label { color: #b0b0cc; font-size: 0.83rem; font-weight: 500; margin-bottom: 0.3rem; }
+
+    /* ── BUTTONS ── */
+    .btn-primary { background: linear-gradient(135deg, #6c63ff, #4f46e5); border: none; color: white; font-weight: 600; border-radius: 8px; }
+    .btn-primary:hover { background: linear-gradient(135deg, #7c73ff, #5f56f5); color: white; }
+    .btn-outline-primary { border-color: rgba(124,111,255,0.5); color: #a89dff; }
+    .btn-outline-primary:hover { background: rgba(124,111,255,0.15); border-color: var(--primary); color: #c4b5fd; }
+    .btn-outline-secondary { border-color: rgba(255,255,255,0.15); color: #c0bfd8; }
+    .btn-outline-secondary:hover { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.25); }
+    .btn-warning { background: #d97706; border:none; color:white; font-weight:600; }
+    .btn-sm { font-size: 0.8rem; padding: 0.35rem 0.75rem; }
+
+    /* ── ALERTS ── */
+    .alert { border-radius: 10px; font-size: 0.88rem; }
+    .alert-link { font-weight: 700; }
+
+    /* ── TEXT ── */
+    h3.fw-bold { color: #f0f0ff; font-size: 1.4rem; }
+    .text-muted { color: #8888aa !important; }
+    code { color: #a89dff; background: rgba(124,111,255,0.12); padding: 0.15rem 0.45rem; border-radius: 5px; font-size: 0.85rem; }
+
     @media(max-width:768px){ .sidebar{display:none;} .main-content{margin-left:0;} }
   </style>
 </head>

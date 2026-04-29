@@ -3,8 +3,8 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
-    <h3 class="fw-bold mb-0">Dashboard</h3>
-    <small class="text-muted">Alexander AI Solutions</small>
+    <h3 class="fw-bold mb-0" style="color:#f0f0ff;">Dashboard</h3>
+    <small style="color:#8888aa;">Alexander AI Solutions</small>
   </div>
   <div class="d-flex gap-2">
     <a href="/admin/import" class="btn btn-primary btn-sm">
@@ -28,26 +28,26 @@
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">
     <div class="card stat-card p-3">
-      <small class="text-muted">Products</small>
+      <div style="color:#9090b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">Products</div>
       <div class="stat-val">{{ stats.products }}</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="card stat-card p-3">
-      <small class="text-muted">Total Orders</small>
+      <div style="color:#9090b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">Total Orders</div>
       <div class="stat-val">{{ stats.orders }}</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="card stat-card p-3">
-      <small class="text-muted">Revenue</small>
+      <div style="color:#9090b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">Revenue</div>
       <div class="stat-val">${{ '%.0f'|format(stats.revenue) }}</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="card stat-card p-3">
-      <small class="text-muted">Pending</small>
-      <div class="stat-val" style="color:{% if stats.pending > 0 %}#ffc107{% else %}var(--primary){% endif %};">{{ stats.pending }}</div>
+      <div style="color:#9090b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">Pending</div>
+      <div class="stat-val" style="color:{% if stats.pending > 0 %}#ffd55a{% else %}#a89dff{% endif %};">{{ stats.pending }}</div>
     </div>
   </div>
 </div>
@@ -55,7 +55,7 @@
 <!-- Recent Orders -->
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <strong>Recent Orders</strong>
+    <strong style="color:#e8e8f0;">Recent Orders</strong>
     <a href="/admin/orders" class="btn btn-sm btn-outline-primary">View All</a>
   </div>
   <div class="card-body p-0">
@@ -89,30 +89,30 @@
 <div class="row g-3 mt-2">
   <div class="col-md-3">
     <a href="/admin/import" class="card text-decoration-none d-block p-3 text-center" style="transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-      <i class="bi bi-cloud-download fs-2 text-primary mb-2 d-block"></i>
-      <strong>Import Products</strong>
-      <small class="text-muted d-block">Search CJ catalog & import with one click</small>
+      <i class="bi bi-cloud-download fs-2 mb-2 d-block" style="color:#a89dff;"></i>
+      <strong style="color:#e8e8f0;">Import Products</strong>
+      <small style="color:#8888aa;font-size:0.78rem;display:block;margin-top:0.2rem;">Search CJ catalog &amp; import with one click</small>
     </a>
   </div>
   <div class="col-md-3">
     <a href="/admin/orders?status=pending" class="card text-decoration-none d-block p-3 text-center" style="transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-      <i class="bi bi-bag-check fs-2 text-warning mb-2 d-block"></i>
-      <strong>Pending Orders</strong>
-      <small class="text-muted d-block">{{ stats.pending }} order(s) need attention</small>
+      <i class="bi bi-bag-check fs-2 mb-2 d-block" style="color:#ffd55a;"></i>
+      <strong style="color:#e8e8f0;">Pending Orders</strong>
+      <small style="color:#8888aa;font-size:0.78rem;display:block;margin-top:0.2rem;">{{ stats.pending }} order(s) need attention</small>
     </a>
   </div>
   <div class="col-md-3">
     <a href="/admin/ai" class="card text-decoration-none d-block p-3 text-center" style="transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-      <i class="bi bi-robot fs-2 text-primary mb-2 d-block"></i>
-      <strong>AI Assistant</strong>
-      <small class="text-muted d-block">Ask AI about your business</small>
+      <i class="bi bi-robot fs-2 mb-2 d-block" style="color:#a89dff;"></i>
+      <strong style="color:#e8e8f0;">AI Assistant</strong>
+      <small style="color:#8888aa;font-size:0.78rem;display:block;margin-top:0.2rem;">Ask AI about your business</small>
     </a>
   </div>
   <div class="col-md-3">
     <a href="/admin/settings" class="card text-decoration-none d-block p-3 text-center" style="transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-      <i class="bi bi-gear fs-2 text-primary mb-2 d-block"></i>
-      <strong>Settings</strong>
-      <small class="text-muted d-block">CJ API, Stripe, store config</small>
+      <i class="bi bi-gear fs-2 mb-2 d-block" style="color:#a89dff;"></i>
+      <strong style="color:#e8e8f0;">Settings</strong>
+      <small style="color:#8888aa;font-size:0.78rem;display:block;margin-top:0.2rem;">CJ API, Stripe, store config</small>
     </a>
   </div>
 </div>
