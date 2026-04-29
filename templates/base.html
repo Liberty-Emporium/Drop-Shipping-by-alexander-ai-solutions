@@ -297,6 +297,8 @@
     </a>
     {% if session.get('logged_in') %}
     <a href="/admin" class="btn-nav btn-sm">⚙️ Admin</a>
+    {% else %}
+    <a href="/login" class="btn-nav btn-sm">🔑 Login</a>
     {% endif %}
   </div>
 </nav>
@@ -324,6 +326,9 @@
     <div style="display:flex;gap:1.5rem;">
       <a href="/shop" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Shop</a>
       <a href="/cart" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Cart</a>
+      {% if not session.get('logged_in') %}
+      <a href="/login" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Admin Login</a>
+      {% endif %}
     </div>
   </div>
 </footer>
