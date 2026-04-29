@@ -4,138 +4,369 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ app_name }}{% endblock %}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --primary: #6c63ff;
-      --primary-dark: #5a52d5;
-      --dark: #0f0f1a;
-      --card-bg: #1a1a2e;
-      --border: rgba(108,99,255,0.2);
+      --bg:        #05050f;
+      --surface:   #0d0d1f;
+      --surface2:  #12122a;
+      --border:    rgba(255,255,255,0.07);
+      --text:      #f0f0ff;
+      --muted:     rgba(255,255,255,0.45);
+      --accent1:   #7c3aed;
+      --accent2:   #06b6d4;
+      --accent3:   #f472b6;
+      --grad:      linear-gradient(135deg, #7c3aed, #06b6d4);
+      --grad2:     linear-gradient(135deg, #f472b6, #7c3aed);
+      --glow1:     rgba(124,58,237,0.4);
+      --glow2:     rgba(6,182,212,0.3);
     }
-    body { background: var(--dark); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
-    .navbar { background: rgba(26,26,46,0.98) !important; border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); }
-    .navbar-brand { font-weight: 700; color: var(--primary) !important; letter-spacing: -0.5px; }
-    .nav-link { color: #ccc !important; }
-    .nav-link:hover { color: var(--primary) !important; }
-    .btn-primary { background: var(--primary); border-color: var(--primary); }
-    .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
-    .btn-outline-primary { color: var(--primary); border-color: var(--primary); }
-    .btn-outline-primary:hover { background: var(--primary); border-color: var(--primary); }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
-    .card-header { background: rgba(108,99,255,0.1); border-bottom: 1px solid var(--border); }
-    .product-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-    .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(108,99,255,0.25); }
-    .product-img { height: 220px; object-fit: cover; border-radius: 10px 10px 0 0; background: #16213e; }
-    .badge-primary { background: var(--primary); }
-    footer { background: var(--card-bg); border-top: 1px solid var(--border); }
-    .text-primary { color: var(--primary) !important; }
-    .hero { background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-            min-height: 70vh; display: flex; align-items: center; }
-    .hero-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; }
-    .hero-subtitle { font-size: 1.2rem; color: #aaa; }
-    .glow { text-shadow: 0 0 20px rgba(108,99,255,0.5); }
-    input, select, textarea { background: #16213e !important; border-color: var(--border) !important; color: #e0e0e0 !important; }
-    input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 0.2rem rgba(108,99,255,0.25) !important; }
-    .table { color: #e0e0e0; }
-    .table thead { color: #aaa; }
-    .table-dark { --bs-table-bg: transparent; }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(5,5,15,0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    .navbar.scrolled { background: rgba(5,5,15,0.95); }
+    .navbar-brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 1.3rem;
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .navbar-brand .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--grad);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1rem; -webkit-text-fill-color: white;
+    }
+    .nav-links { display: flex; align-items: center; gap: 0.25rem; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      padding: 0.5rem 1rem; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .nav-cart {
+      position: relative;
+      color: var(--muted); text-decoration: none;
+      padding: 0.5rem 0.75rem; border-radius: 8px;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+    }
+    .nav-cart:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .cart-badge {
+      position: absolute; top: 2px; right: 2px;
+      background: var(--grad); color: white;
+      font-size: 0.6rem; font-weight: 700;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+    .btn-nav {
+      background: var(--grad); color: white;
+      padding: 0.5rem 1.25rem; border-radius: 8px;
+      font-size: 0.85rem; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-nav:hover { opacity: 0.9; transform: translateY(-1px); color: white; }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--grad); color: white;
+      padding: 0.75rem 1.75rem; border-radius: 12px;
+      font-weight: 600; font-size: 0.95rem;
+      border: none; cursor: pointer; text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow: 0 0 30px var(--glow1);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 50px var(--glow1); opacity: 0.95; color: white; }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.05); color: var(--text);
+      padding: 0.75rem 1.75rem; border-radius: 12px;
+      font-weight: 600; font-size: 0.95rem;
+      border: 1px solid var(--border); cursor: pointer; text-decoration: none;
+      transition: all 0.2s; backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.15); color: white; transform: translateY(-2px); }
+
+    .btn-sm {
+      padding: 0.4rem 1rem;
+      font-size: 0.82rem;
+      border-radius: 8px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.2);
+      border-color: rgba(124,58,237,0.3);
+    }
+    .card-body { padding: 1.25rem; }
+
+    /* ── PRODUCT CARD ── */
+    .product-img {
+      width: 100%; height: 220px;
+      object-fit: cover;
+      background: var(--surface2);
+      display: block;
+    }
+    .product-img-placeholder {
+      width: 100%; height: 220px;
+      background: linear-gradient(135deg, #0d0d1f, #12122a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem; color: rgba(255,255,255,0.1);
+    }
+    .product-category {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .product-name { font-weight: 600; font-size: 0.92rem; line-height: 1.4; color: var(--text); margin: 0.25rem 0; }
+    .product-price { font-size: 1.2rem; font-weight: 800; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .btn-atc {
+      background: var(--grad); color: white; border: none;
+      padding: 0.5rem; border-radius: 8px; cursor: pointer;
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 15px var(--glow1);
+      font-size: 0.9rem;
+    }
+    .btn-atc:hover { transform: scale(1.15); box-shadow: 0 0 25px var(--glow1); }
+
+    /* ── PRODUCT GRID ── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* ── ALERTS ── */
+    .alert {
+      padding: 0.85rem 1.25rem; border-radius: 12px;
+      font-size: 0.9rem; margin-bottom: 1rem;
+      border: 1px solid transparent;
+    }
+    .alert-success { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+    .alert-error, .alert-danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+    .alert-info { background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.3); color: #67e8f9; }
+    .alert-warning { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #fcd34d; }
+
+    /* ── FORM INPUTS ── */
+    input, select, textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent1);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-bottom: 0.4rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem 2rem;
+      margin-top: 6rem;
+    }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .footer-brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .footer-copy { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── UTILITIES ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    .section { padding: 5rem 0; }
+    .section-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700; margin-bottom: 0.5rem; }
+    .section-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 2.5rem; }
+    .text-muted { color: var(--muted) !important; }
+    .text-grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .text-grad2 { background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* ── GLOW ORBS (decorative) ── */
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); pointer-events: none; z-index: 0;
+    }
+
+    /* ── MAIN WRAPPER ── */
+    main { padding-top: 72px; }
+
+    /* ── PILL ── */
+    .pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(124,58,237,0.15); color: #c4b5fd;
+      border: 1px solid rgba(124,58,237,0.3);
+      padding: 0.35rem 0.9rem; border-radius: 999px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+
+    /* ── CATEGORY PILLS ── */
+    .cat-pill {
+      display: inline-flex; align-items: center;
+      padding: 0.4rem 1rem; border-radius: 999px;
+      font-size: 0.82rem; font-weight: 600;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); text-decoration: none;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .cat-pill:hover, .cat-pill.active {
+      background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.4);
+      color: #c4b5fd;
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em;
+    }
+    .badge-free-ship { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width: 768px) {
+      .navbar { padding: 0.75rem 1rem; }
+      .nav-links { display: none; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+      .product-img, .product-img-placeholder { height: 160px; }
+    }
+    @media(max-width: 480px) {
+      .products-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    }
   </style>
   {% block head %}{% endblock %}
 </head>
 <body>
-<nav class="navbar navbar-expand-lg sticky-top">
-  <div class="container">
-    <a class="navbar-brand" href="/">
-      <i class="bi bi-cpu"></i> {{ app_name }}
+
+<!-- Navbar -->
+<nav class="navbar" id="navbar">
+  <a href="/" class="navbar-brand">
+    <span class="logo-icon">⚡</span>
+    {{ app_name }}
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/shop">Shop</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.5rem;">
+    <a href="/cart" class="nav-cart">
+      <i class="bi bi-bag"></i>
+      <span class="cart-badge" id="cart-badge" style="{% if not cart_count or cart_count == 0 %}display:none{% endif %}">{{ cart_count or '' }}</span>
     </a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
-      <i class="bi bi-list text-white fs-4"></i>
-    </button>
-    <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="/shop">Shop</a></li>
-      </ul>
-      <ul class="navbar-nav ms-auto align-items-center gap-2">
-        <li class="nav-item">
-          <a class="nav-link position-relative" href="/cart">
-            <i class="bi bi-bag"></i>
-            <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style="font-size:0.6rem;">
-              {% if cart_count > 0 %}{{ cart_count }}{% endif %}
-            </span>
-          </a>
-        </li>
-        {% if session.get('logged_in') %}
-        <li class="nav-item">
-          <a class="btn btn-sm btn-outline-primary" href="/admin">
-            <i class="bi bi-speedometer2"></i> Admin
-          </a>
-        </li>
-        {% endif %}
-      </ul>
-    </div>
+    {% if session.get('logged_in') %}
+    <a href="/admin" class="btn-nav btn-sm">⚙️ Admin</a>
+    {% endif %}
   </div>
 </nav>
 
+<!-- Alerts -->
 <main>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="container mt-3">
+    <div class="container" style="margin-top:1rem;">
       {% for cat, msg in messages %}
-      <div class="alert alert-{{ 'success' if cat == 'success' else 'danger' if cat == 'error' else 'info' }} alert-dismissible">
-        {{ msg }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div class="alert alert-{{ 'success' if cat == 'success' else 'error' if cat == 'error' else 'info' }}">
+        {{ msg }}
       </div>
       {% endfor %}
     </div>
     {% endif %}
   {% endwith %}
-
   {% block content %}{% endblock %}
 </main>
 
-<footer class="py-4 mt-5">
-  <div class="container text-center text-muted">
-    <p class="mb-1">© {{ now.year }} {{ app_name }} · AI-Powered Tech Store</p>
-    <small>Fast shipping · Secure checkout · AI-curated products</small>
+<footer>
+  <div class="footer-inner">
+    <span class="footer-brand">⚡ {{ app_name }}</span>
+    <span class="footer-copy">© {{ now.year }} Alexander AI Solutions · AI-curated tech gear for builders</span>
+    <div style="display:flex;gap:1.5rem;">
+      <a href="/shop" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Shop</a>
+      <a href="/cart" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Cart</a>
+    </div>
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Update cart badge
-async function refreshCartBadge() {
+// Navbar scroll effect
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// Cart count
+async function refreshCart() {
   try {
     const r = await fetch('/api/cart/count');
     const d = await r.json();
-    const badge = document.getElementById('cart-badge');
-    if (badge) badge.textContent = d.count > 0 ? d.count : '';
+    const b = document.getElementById('cart-badge');
+    if (b) { b.textContent = d.count || ''; b.style.display = d.count > 0 ? 'flex' : 'none'; }
   } catch(e) {}
 }
 
 // Add to cart
-async function addToCart(productId, qty=1) {
-  const btn = event.target.closest('button');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...'; }
+async function addToCart(pid, qty=1, btn=null) {
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i>'; }
   try {
     const r = await fetch('/api/cart/add', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({product_id: productId, quantity: qty})
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({product_id: pid, quantity: qty})
     });
     const d = await r.json();
     if (d.success) {
-      const badge = document.getElementById('cart-badge');
-      if (badge) badge.textContent = d.cart_count;
-      if (btn) { btn.innerHTML = '<i class="bi bi-check2"></i> Added!'; btn.classList.add('btn-success'); btn.classList.remove('btn-primary'); }
-      setTimeout(() => {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-bag-plus"></i> Add to Cart'; btn.classList.remove('btn-success'); btn.classList.add('btn-primary'); }
-      }, 2000);
+      const b = document.getElementById('cart-badge');
+      if (b) { b.textContent = d.cart_count; b.style.display = 'flex'; }
+      if (btn) {
+        btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+        btn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-bag-plus"></i>';
+          btn.style.background = '';
+        }, 1800);
+      }
     }
-  } catch(e) {
-    if (btn) { btn.disabled = false; btn.textContent = 'Add to Cart'; }
-  }
+  } catch(e) { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-bag-plus"></i>'; } }
 }
 </script>
 {% block scripts %}{% endblock %}

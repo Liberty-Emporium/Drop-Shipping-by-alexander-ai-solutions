@@ -1,62 +1,84 @@
 {% extends 'base.html' %}
 {% block title %}Shop — {{ app_name }}{% endblock %}
+{% block head %}
+<style>
+.shop-header {
+  background: linear-gradient(180deg, rgba(124,58,237,0.1) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 3rem 0 2rem;
+  margin-bottom: 2.5rem;
+}
+</style>
+{% endblock %}
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
-    <h2 class="mb-0 fw-bold">
-      {% if search %}<i class="bi bi-search"></i> "{{ search }}"
-      {% elif current_category %}{{ current_category }}
-      {% else %}<i class="bi bi-grid3x3-gap text-primary"></i> All Products
+
+<div class="shop-header">
+  <div class="container">
+    <h1 class="section-title" style="margin-bottom:0.25rem;">
+      {% if search %}
+        Results for "<span class="text-grad">{{ search }}</span>"
+      {% elif current_category %}
+        <span class="text-grad">{{ current_category }}</span>
+      {% else %}
+        All Products
       {% endif %}
-    </h2>
-    <form class="d-flex gap-2" method="GET">
-      <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Search tech gear...">
-      <button class="btn btn-primary"><i class="bi bi-search"></i></button>
+    </h1>
+    <p style="color:var(--muted);margin-bottom:1.5rem;">{{ products|length }} item{{ 's' if products|length != 1 }}</p>
+
+    <!-- Search bar -->
+    <form method="GET" style="display:flex;gap:0.75rem;max-width:500px;">
+      <input type="text" name="q" value="{{ search }}" placeholder="Search tech gear..." style="flex:1;">
+      <button type="submit" class="btn-primary btn-sm" style="white-space:nowrap;">
+        <i class="bi bi-search"></i> Search
+      </button>
     </form>
   </div>
+</div>
 
-  <!-- Category Pills -->
-  <div class="d-flex gap-2 flex-wrap mb-4">
-    <a href="/shop" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-secondary{% %}">All</a>
+<div class="container" style="padding-bottom:5rem;">
+  <!-- Category pills -->
+  {% if categories %}
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:2rem;">
+    <a href="/shop" class="cat-pill {% if not current_category %}active{% endif %}">All</a>
     {% for cat in categories %}
-    <a href="/shop?category={{ cat.category }}"
-       class="btn btn-sm {% if current_category == cat.category %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+    <a href="/shop?category={{ cat.category }}" class="cat-pill {% if current_category == cat.category %}active{% endif %}">
       {{ cat.category }}
     </a>
     {% endfor %}
   </div>
+  {% endif %}
 
   {% if products %}
-  <div class="row g-4">
+  <div class="products-grid">
     {% for p in products %}
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="card product-card h-100" onclick="window.location='/product/{{ p.id }}'">
-        {% if p.image_url %}
-        <img src="{{ p.image_url }}" class="product-img w-100" alt="{{ p.name }}" loading="lazy">
-        {% else %}
-        <div class="product-img w-100 d-flex align-items-center justify-content-center">
-          <i class="bi bi-cpu fs-1 text-muted"></i>
-        </div>
-        {% endif %}
-        <div class="card-body d-flex flex-column">
-          {% if p.category %}<small class="text-primary mb-1">{{ p.category }}</small>{% endif %}
-          <h6 class="flex-grow-1 mb-2">{{ p.name }}</h6>
-          <div class="d-flex align-items-center justify-content-between mt-auto">
-            <span class="fw-bold fs-5" style="color:var(--primary);">${{ '%.2f'|format(p.price) }}</span>
-            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); addToCart({{ p.id }})">
-              <i class="bi bi-bag-plus"></i>
-            </button>
+    <div class="card" style="cursor:pointer;" onclick="window.location='/product/{{ p.id }}'">
+      {% if p.image_url %}
+      <img src="{{ p.image_url }}" class="product-img" alt="{{ p.name }}" loading="lazy">
+      {% else %}
+      <div class="product-img-placeholder">⌨️</div>
+      {% endif %}
+      <div class="card-body">
+        {% if p.category %}<div class="product-category">{{ p.category }}</div>{% endif %}
+        <div class="product-name">{{ p.name[:60] }}{% if p.name|length > 60 %}...{% endif %}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.75rem;">
+          <div>
+            <div class="product-price">${{ '%.2f'|format(p.price) }}</div>
+            {% if p.price >= 50 %}<div class="badge badge-free-ship" style="font-size:0.65rem;margin-top:2px;">Free Shipping</div>{% endif %}
           </div>
+          <button class="btn-atc" onclick="event.stopPropagation(); addToCart({{ p.id }}, 1, this)">
+            <i class="bi bi-bag-plus"></i>
+          </button>
         </div>
       </div>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <div class="text-center py-5">
-    <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
-    <h4 class="text-muted">No products found</h4>
-    <a href="/shop" class="btn btn-outline-primary mt-3">Clear filters</a>
+  <div style="text-align:center;padding:5rem 0;">
+    <div style="font-size:3.5rem;margin-bottom:1rem;">🔍</div>
+    <h3 style="color:var(--muted);">Nothing found</h3>
+    <p style="color:var(--muted);margin:0.5rem 0 1.5rem;">Try a different search or browse all products.</p>
+    <a href="/shop" class="btn-secondary">Clear filters</a>
   </div>
   {% endif %}
 </div>
