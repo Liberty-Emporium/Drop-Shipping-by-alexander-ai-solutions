@@ -1,0 +1,63 @@
+{% extends 'admin/base.html' %}
+{% block title %}Edit Product{% endblock %}
+{% block content %}
+<div class="mb-4"><a href="/admin/products" class="text-primary"><i class="bi bi-arrow-left"></i> Back to Products</a></div>
+<h3 class="fw-bold mb-4">Edit Product</h3>
+<div class="card" style="max-width:700px;">
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label fw-semibold">Product Name *</label>
+          <input type="text" name="name" class="form-control" required value="{{ product.name }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Sell Price *</label>
+          <div class="input-group"><span class="input-group-text bg-transparent text-white border-end-0">$</span>
+          <input type="number" name="price" class="form-control border-start-0" required step="0.01" value="{{ product.price }}"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Cost Price</label>
+          <div class="input-group"><span class="input-group-text bg-transparent text-white border-end-0">$</span>
+          <input type="number" name="cost" class="form-control border-start-0" step="0.01" value="{{ product.cost or '' }}"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Category</label>
+          <input type="text" name="category" class="form-control" value="{{ product.category or '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Stock</label>
+          <input type="number" name="stock" class="form-control" value="{{ product.stock }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Image URL</label>
+          <input type="url" name="image_url" class="form-control" value="{{ product.image_url or '' }}">
+          {% if product.image_url %}
+          <img src="{{ product.image_url }}" class="mt-2 rounded" style="max-height:100px; max-width:100%;">
+          {% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">CJ Product ID</label>
+          <input type="text" name="cj_pid" class="form-control" value="{{ product.cj_pid or '' }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Description</label>
+          <textarea name="description" class="form-control" rows="3">{{ product.description or '' }}</textarea>
+        </div>
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="active" id="active"
+                   {% if product.active %}checked{% endif %}>
+            <label class="form-check-label" for="active">Active (visible in store)</label>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+        <a href="/admin/products" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

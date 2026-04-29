@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/" class="text-primary">Home</a></li>
+      <li class="breadcrumb-item"><a href="/shop" class="text-primary">Shop</a></li>
+      {% if product.category %}
+      <li class="breadcrumb-item"><a href="/shop?category={{ product.category }}" class="text-primary">{{ product.category }}</a></li>
+      {% endif %}
+      <li class="breadcrumb-item active text-muted">{{ product.name[:40] }}...</li>
+    </ol>
+  </nav>
+
+  <div class="row g-5">
+    <!-- Image -->
+    <div class="col-md-5">
+      {% if product.image_url %}
+      <img src="{{ product.image_url }}" class="w-100 rounded-3" style="max-height:450px; object-fit:contain; background:var(--card-bg); padding:1rem;" alt="{{ product.name }}">
+      {% else %}
+      <div class="w-100 rounded-3 d-flex align-items-center justify-content-center" style="height:400px; background:var(--card-bg);">
+        <i class="bi bi-cpu" style="font-size:5rem; color:#444;"></i>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Details -->
+    <div class="col-md-7">
+      {% if product.category %}
+      <span class="badge mb-2" style="background:var(--primary);">{{ product.category }}</span>
+      {% endif %}
+      <h1 class="fw-bold mb-2" style="font-size:1.8rem;">{{ product.name }}</h1>
+      <div class="mb-3">
+        <span class="fs-2 fw-bold" style="color:var(--primary);">${{ '%.2f'|format(product.price) }}</span>
+        {% if product.price >= 50 %}
+        <span class="badge bg-success ms-2">Free Shipping</span>
+        {% else %}
+        <span class="text-muted ms-2 small">+ $4.99 shipping</span>
+        {% endif %}
+      </div>
+
+      {% if product.description %}
+      <p class="text-muted mb-4">{{ product.description }}</p>
+      {% endif %}
+
+      <!-- Qty + Add to cart -->
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="input-group" style="max-width:120px;">
+          <button class="btn btn-outline-secondary" onclick="changeQty(-1)">−</button>
+          <input type="number" id="qty" value="1" min="1" max="99" class="form-control text-center">
+          <button class="btn btn-outline-secondary" onclick="changeQty(1)">+</button>
+        </div>
+        <button id="atc-btn" class="btn btn-primary btn-lg px-4" onclick="addToCartQty({{ product.id }})">
+          <i class="bi bi-bag-plus"></i> Add to Cart
+        </button>
+      </div>
+
+      <!-- Trust signals -->
+      <div class="d-flex flex-wrap gap-3" style="color:#888; font-size:0.85rem;">
+        <span><i class="bi bi-shield-check text-primary"></i> Secure checkout</span>
+        <span><i class="bi bi-truck text-primary"></i> Ships from supplier</span>
+        <span><i class="bi bi-arrow-counterclockwise text-primary"></i> 30-day returns</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related -->
+  {% if related %}
+  <div class="mt-5">
+    <h4 class="fw-bold mb-4">You might also like</h4>
+    <div class="row g-4">
+      {% for p in related %}
+      <div class="col-6 col-md-3">
+        <div class="card product-card h-100" onclick="window.location='/product/{{ p.id }}'">
+          {% if p.image_url %}
+          <img src="{{ p.image_url }}" class="product-img w-100" alt="{{ p.name }}" loading="lazy">
+          {% else %}
+          <div class="product-img w-100 d-flex align-items-center justify-content-center">
+            <i class="bi bi-cpu fs-2 text-muted"></i>
+          </div>
+          {% endif %}
+          <div class="card-body">
+            <h6 class="mb-1">{{ p.name }}</h6>
+            <span style="color:var(--primary);">${{ '%.2f'|format(p.price) }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function changeQty(delta) {
+  const input = document.getElementById('qty');
+  const v = Math.max(1, Math.min(99, parseInt(input.value||1) + delta));
+  input.value = v;
+}
+function addToCartQty(pid) {
+  const qty = parseInt(document.getElementById('qty').value || 1);
+  const btn = document.getElementById('atc-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...';
+  fetch('/api/cart/add', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({product_id: pid, quantity: qty})
+  }).then(r=>r.json()).then(d=>{
+    if (d.success) {
+      btn.innerHTML = '<i class="bi bi-check2"></i> Added!';
+      btn.classList.add('btn-success'); btn.classList.remove('btn-primary');
+      const badge = document.getElementById('cart-badge');
+      if (badge) badge.textContent = d.cart_count;
+      setTimeout(()=>{
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-bag-plus"></i> Add to Cart';
+        btn.classList.remove('btn-success'); btn.classList.add('btn-primary');
+      }, 2000);
+    } else { btn.disabled = false; btn.textContent = 'Add to Cart'; }
+  });
+}
+</script>
+{% endblock %}

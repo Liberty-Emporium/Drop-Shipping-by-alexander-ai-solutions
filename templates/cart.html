@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Cart — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:800px;">
+  <h2 class="fw-bold mb-4"><i class="bi bi-bag text-primary"></i> Your Cart</h2>
+
+  {% if cart %}
+  <div class="card mb-4">
+    <div class="card-body p-0">
+      {% for item in cart %}
+      <div class="d-flex align-items-center gap-3 p-3 border-bottom" style="border-color:var(--border)!important;">
+        {% if item.image_url %}
+        <img src="{{ item.image_url }}" width="70" height="70" style="object-fit:cover; border-radius:8px;">
+        {% else %}
+        <div style="width:70px;height:70px;background:#16213e;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <i class="bi bi-cpu text-muted"></i>
+        </div>
+        {% endif %}
+        <div class="flex-grow-1">
+          <h6 class="mb-0">{{ item.name }}</h6>
+          <small style="color:var(--primary);">${{ '%.2f'|format(item.price) }} each</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <div class="input-group input-group-sm" style="width:110px;">
+            <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.product_id }}, {{ item.quantity - 1 }})">−</button>
+            <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly>
+            <button class="btn btn-outline-secondary btn-sm" onclick="updateCart({{ item.product_id }}, {{ item.quantity + 1 }})">+</button>
+          </div>
+          <strong style="min-width:60px; text-align:right;">${{ '%.2f'|format(item.price * item.quantity) }}</strong>
+          <button class="btn btn-sm btn-outline-danger" onclick="removeCart({{ item.product_id }})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between mb-2">
+        <span>Subtotal</span><strong>${{ '%.2f'|format(subtotal) }}</strong>
+      </div>
+      <div class="d-flex justify-content-between mb-3">
+        <span>Shipping</span>
+        <strong>{% if subtotal >= 50 %}<span class="text-success">Free</span>{% else %}$4.99{% endif %}</strong>
+      </div>
+      {% if subtotal < 50 %}
+      <div class="alert alert-info py-2 small mb-3">
+        <i class="bi bi-truck"></i> Add ${{ '%.2f'|format(50 - subtotal) }} more for free shipping!
+      </div>
+      {% endif %}
+      <div class="d-flex justify-content-between fs-5 fw-bold mb-3">
+        <span>Total</span>
+        <span style="color:var(--primary);">${{ '%.2f'|format(subtotal + (0 if subtotal >= 50 else 4.99)) }}</span>
+      </div>
+      <a href="/checkout" class="btn btn-primary w-100 btn-lg">
+        <i class="bi bi-lock"></i> Proceed to Checkout
+      </a>
+      <a href="/shop" class="btn btn-outline-secondary w-100 mt-2">Continue Shopping</a>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-bag fs-1 text-muted mb-3 d-block"></i>
+    <h4 class="text-muted">Your cart is empty</h4>
+    <a href="/shop" class="btn btn-primary mt-3">Start Shopping</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function updateCart(pid, qty) {
+  await fetch('/api/cart/update', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product_id: pid, quantity: qty})
+  });
+  window.location.reload();
+}
+async function removeCart(pid) {
+  await fetch('/api/cart/remove', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product_id: pid})
+  });
+  window.location.reload();
+}
+</script>
+{% endblock %}

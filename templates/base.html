@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6c63ff;
+      --primary-dark: #5a52d5;
+      --dark: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --border: rgba(108,99,255,0.2);
+    }
+    body { background: var(--dark); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+    .navbar { background: rgba(26,26,46,0.98) !important; border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); }
+    .navbar-brand { font-weight: 700; color: var(--primary) !important; letter-spacing: -0.5px; }
+    .nav-link { color: #ccc !important; }
+    .nav-link:hover { color: var(--primary) !important; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+    .btn-outline-primary { color: var(--primary); border-color: var(--primary); }
+    .btn-outline-primary:hover { background: var(--primary); border-color: var(--primary); }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
+    .card-header { background: rgba(108,99,255,0.1); border-bottom: 1px solid var(--border); }
+    .product-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(108,99,255,0.25); }
+    .product-img { height: 220px; object-fit: cover; border-radius: 10px 10px 0 0; background: #16213e; }
+    .badge-primary { background: var(--primary); }
+    footer { background: var(--card-bg); border-top: 1px solid var(--border); }
+    .text-primary { color: var(--primary) !important; }
+    .hero { background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 70vh; display: flex; align-items: center; }
+    .hero-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; }
+    .hero-subtitle { font-size: 1.2rem; color: #aaa; }
+    .glow { text-shadow: 0 0 20px rgba(108,99,255,0.5); }
+    input, select, textarea { background: #16213e !important; border-color: var(--border) !important; color: #e0e0e0 !important; }
+    input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 0.2rem rgba(108,99,255,0.25) !important; }
+    .table { color: #e0e0e0; }
+    .table thead { color: #aaa; }
+    .table-dark { --bs-table-bg: transparent; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <i class="bi bi-cpu"></i> {{ app_name }}
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <i class="bi bi-list text-white fs-4"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="/shop">Shop</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item">
+          <a class="nav-link position-relative" href="/cart">
+            <i class="bi bi-bag"></i>
+            <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style="font-size:0.6rem;">
+              {% if cart_count > 0 %}{{ cart_count }}{% endif %}
+            </span>
+          </a>
+        </li>
+        {% if session.get('logged_in') %}
+        <li class="nav-item">
+          <a class="btn btn-sm btn-outline-primary" href="/admin">
+            <i class="bi bi-speedometer2"></i> Admin
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+      {% for cat, msg in messages %}
+      <div class="alert alert-{{ 'success' if cat == 'success' else 'danger' if cat == 'error' else 'info' }} alert-dismissible">
+        {{ msg }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="py-4 mt-5">
+  <div class="container text-center text-muted">
+    <p class="mb-1">© {{ now.year }} {{ app_name }} · AI-Powered Tech Store</p>
+    <small>Fast shipping · Secure checkout · AI-curated products</small>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Update cart badge
+async function refreshCartBadge() {
+  try {
+    const r = await fetch('/api/cart/count');
+    const d = await r.json();
+    const badge = document.getElementById('cart-badge');
+    if (badge) badge.textContent = d.count > 0 ? d.count : '';
+  } catch(e) {}
+}
+
+// Add to cart
+async function addToCart(productId, qty=1) {
+  const btn = event.target.closest('button');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...'; }
+  try {
+    const r = await fetch('/api/cart/add', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({product_id: productId, quantity: qty})
+    });
+    const d = await r.json();
+    if (d.success) {
+      const badge = document.getElementById('cart-badge');
+      if (badge) badge.textContent = d.cart_count;
+      if (btn) { btn.innerHTML = '<i class="bi bi-check2"></i> Added!'; btn.classList.add('btn-success'); btn.classList.remove('btn-primary'); }
+      setTimeout(() => {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-bag-plus"></i> Add to Cart'; btn.classList.remove('btn-success'); btn.classList.add('btn-primary'); }
+      }, 2000);
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Add to Cart'; }
+  }
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

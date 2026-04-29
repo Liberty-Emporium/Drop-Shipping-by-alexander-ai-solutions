@@ -1,0 +1,114 @@
+{% extends 'admin/base.html' %}
+{% block title %}Order {{ order.order_num }}{% endblock %}
+{% block content %}
+<div class="mb-4"><a href="/admin/orders" class="text-primary"><i class="bi bi-arrow-left"></i> Back to Orders</a></div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-0">Order <code style="color:var(--primary);">{{ order.order_num }}</code></h3>
+    <small class="text-muted">Placed {{ order.created_at[:16].replace('T',' ') }}</small>
+  </div>
+  <span class="badge badge-status-{{ order.status }} fs-6">{{ order.status.replace('_',' ').title() }}</span>
+</div>
+
+<div class="row g-4">
+  <!-- Left -->
+  <div class="col-lg-7">
+    <!-- Items -->
+    <div class="card mb-3">
+      <div class="card-header"><strong>Items Ordered</strong></div>
+      <div class="card-body p-0">
+        {% for item in items %}
+        <div class="d-flex align-items-center gap-3 p-3 border-bottom" style="border-color:var(--border)!important;">
+          {% if item.image_url %}
+          <img src="{{ item.image_url }}" width="60" height="60" style="object-fit:cover;border-radius:8px;">
+          {% endif %}
+          <div class="flex-grow-1">
+            <strong>{{ item.name }}</strong>
+            {% if item.cj_pid %}<br><small class="text-muted">CJ PID: {{ item.cj_pid }}</small>{% endif %}
+          </div>
+          <div class="text-end">
+            <div>${{ '%.2f'|format(item.price) }} × {{ item.quantity }}</div>
+            <strong style="color:var(--primary);">${{ '%.2f'|format(item.price * item.quantity) }}</strong>
+          </div>
+        </div>
+        {% endfor %}
+        <div class="p-3 text-end">
+          <div class="text-muted">Subtotal: ${{ '%.2f'|format(order.subtotal) }}</div>
+          <strong class="fs-5">Total: ${{ '%.2f'|format(order.total) }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Update Status -->
+    <div class="card">
+      <div class="card-header"><strong>Update Order</strong></div>
+      <div class="card-body">
+        <form method="POST" action="/admin/orders/{{ order.id }}/update-status" class="row g-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="col-md-4">
+            <select name="status" class="form-select">
+              {% for s in ['pending','processing','shipped','delivered','cancelled','needs_review'] %}
+              <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s.replace('_',' ').title() }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-5">
+            <input type="text" name="tracking_number" class="form-control"
+                   placeholder="Tracking number (optional)"
+                   value="{{ order.tracking_number or '' }}">
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Update</button>
+          </div>
+        </form>
+
+        {% if order.status == 'pending' or order.status == 'needs_review' %}
+        <hr style="border-color:var(--border);">
+        <form method="POST" action="/admin/orders/{{ order.id }}/fulfill">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-primary"
+                  onclick="return confirm('Auto-fulfill this order via CJ Dropshipping?')">
+            <i class="bi bi-lightning-charge"></i> Auto-Fulfill via CJ
+          </button>
+        </form>
+        {% endif %}
+
+        {% if order.notes %}
+        <div class="alert alert-warning mt-3 py-2 mb-0">
+          <small><i class="bi bi-exclamation-triangle"></i> {{ order.notes }}</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right -->
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header"><strong>Customer</strong></div>
+      <div class="card-body">
+        <p class="mb-1"><strong>{{ order.customer_name }}</strong></p>
+        <p class="mb-1 text-muted">{{ order.customer_email }}</p>
+        <p class="mb-0 text-muted small">{{ order.customer_address }}</p>
+      </div>
+    </div>
+
+    {% if order.cj_order_id %}
+    <div class="card mb-3">
+      <div class="card-header"><strong>CJ Fulfillment</strong></div>
+      <div class="card-body">
+        <div class="mb-1"><small class="text-muted">CJ Order ID</small></div>
+        <code>{{ order.cj_order_id }}</code>
+        {% if order.tracking_number %}
+        <div class="mt-2">
+          <small class="text-muted d-block">Tracking Number</small>
+          <strong class="text-success">{{ order.tracking_number }}</strong>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

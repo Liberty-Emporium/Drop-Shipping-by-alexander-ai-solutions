@@ -1,0 +1,124 @@
+{% extends 'admin/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-0">Dashboard</h3>
+    <small class="text-muted">Alexander AI Solutions</small>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/admin/import" class="btn btn-primary btn-sm">
+      <i class="bi bi-cloud-download"></i> Import Products
+    </a>
+    <button class="btn btn-outline-secondary btn-sm" onclick="syncTracking()">
+      <i class="bi bi-arrow-repeat"></i> Sync Tracking
+    </button>
+  </div>
+</div>
+
+{% if not cj_configured %}
+<div class="alert" style="background:rgba(255,193,7,0.1); border:1px solid rgba(255,193,7,0.3);">
+  <i class="bi bi-exclamation-triangle text-warning"></i>
+  <strong>CJ API key not configured.</strong>
+  Auto-fulfillment is disabled. <a href="/admin/settings" class="alert-link">Add your key in Settings →</a>
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <small class="text-muted">Products</small>
+      <div class="stat-val">{{ stats.products }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <small class="text-muted">Total Orders</small>
+      <div class="stat-val">{{ stats.orders }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <small class="text-muted">Revenue</small>
+      <div class="stat-val">${{ '%.0f'|format(stats.revenue) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <small class="text-muted">Pending</small>
+      <div class="stat-val" style="color:{% if stats.pending > 0 %}#ffc107{% else %}var(--primary){% endif %};">{{ stats.pending }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Recent Orders</strong>
+    <a href="/admin/orders" class="btn btn-sm btn-outline-primary">View All</a>
+  </div>
+  <div class="card-body p-0">
+    {% if recent_orders %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr>
+          <th>Order #</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th><th></th>
+        </tr></thead>
+        <tbody>
+          {% for o in recent_orders %}
+          <tr>
+            <td><code style="color:var(--primary);">{{ o.order_num }}</code></td>
+            <td>{{ o.customer_name }}</td>
+            <td><strong>${{ '%.2f'|format(o.total) }}</strong></td>
+            <td><span class="badge badge-status-{{ o.status }}">{{ o.status.replace('_',' ').title() }}</span></td>
+            <td><small class="text-muted">{{ o.created_at[:10] }}</small></td>
+            <td><a href="/admin/orders/{{ o.id }}" class="btn btn-sm btn-outline-secondary">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">No orders yet. Share your store link to get started!</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row g-3 mt-2">
+  <div class="col-md-4">
+    <a href="/admin/import" class="card text-decoration-none d-block p-3 text-center" style="transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+      <i class="bi bi-cloud-download fs-2 text-primary mb-2 d-block"></i>
+      <strong>Import Products</strong>
+      <small class="text-muted d-block">Search CJ catalog & import with one click</small>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/admin/orders?status=pending" class="card text-decoration-none d-block p-3 text-center" style="transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+      <i class="bi bi-bag-check fs-2 text-warning mb-2 d-block"></i>
+      <strong>Pending Orders</strong>
+      <small class="text-muted d-block">{{ stats.pending }} order(s) need attention</small>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/admin/settings" class="card text-decoration-none d-block p-3 text-center" style="transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+      <i class="bi bi-gear fs-2 text-primary mb-2 d-block"></i>
+      <strong>Settings</strong>
+      <small class="text-muted d-block">CJ API, Stripe, store config</small>
+    </a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function syncTracking() {
+  const btn = event.target.closest('button');
+  btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Syncing...';
+  const r = await fetch('/api/orders/sync-tracking', {method:'POST', headers:{'Content-Type':'application/json'}});
+  const d = await r.json();
+  btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Sync Tracking';
+  alert(`✅ ${d.updated} order(s) updated with tracking info.`);
+}
+</script>
+{% endblock %}

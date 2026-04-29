@@ -1,0 +1,70 @@
+{% extends 'admin/base.html' %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0">Products <span class="badge bg-primary ms-2">{{ products|length }}</span></h3>
+  <div class="d-flex gap-2">
+    <a href="/admin/import" class="btn btn-primary btn-sm"><i class="bi bi-cloud-download"></i> Import from CJ</a>
+    <a href="/admin/products/add" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus"></i> Add Manually</a>
+  </div>
+</div>
+
+{% if products %}
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr>
+          <th>Image</th><th>Name</th><th>Category</th><th>Cost</th><th>Price</th><th>Stock</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td>
+              {% if p.image_url %}
+              <img src="{{ p.image_url }}" width="50" height="50" style="object-fit:cover;border-radius:6px;">
+              {% else %}
+              <div style="width:50px;height:50px;background:#16213e;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-cpu text-muted small"></i>
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ p.name[:50] }}{% if p.name|length > 50 %}...{% endif %}</strong>
+              {% if p.cj_pid %}<br><small class="text-muted">CJ: {{ p.cj_pid[:20] }}</small>{% endif %}
+            </td>
+            <td><small>{{ p.category or '—' }}</small></td>
+            <td><small class="text-muted">{% if p.cost %}${{ '%.2f'|format(p.cost) }}{% else %}—{% endif %}</small></td>
+            <td><strong style="color:var(--primary);">${{ '%.2f'|format(p.price) }}</strong></td>
+            <td>{{ p.stock }}</td>
+            <td>
+              {% if p.active %}
+              <span class="badge bg-success">Active</span>
+              {% else %}
+              <span class="badge bg-secondary">Hidden</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="/admin/products/edit/{{ p.id }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <form method="POST" action="/admin/products/delete/{{ p.id }}" onsubmit="return confirm('Remove this product?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-box fs-1 text-muted mb-3 d-block"></i>
+  <h4 class="text-muted">No products yet</h4>
+  <a href="/admin/import" class="btn btn-primary mt-3">Import from CJ Dropshipping</a>
+</div>
+{% endif %}
+{% endblock %}

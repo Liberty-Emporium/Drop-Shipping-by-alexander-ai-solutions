@@ -1,0 +1,53 @@
+{% extends 'admin/base.html' %}
+{% block title %}Add Product{% endblock %}
+{% block content %}
+<div class="mb-4"><a href="/admin/products" class="text-primary"><i class="bi bi-arrow-left"></i> Back to Products</a></div>
+<h3 class="fw-bold mb-4">Add Product Manually</h3>
+<div class="card" style="max-width:700px;">
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label fw-semibold">Product Name *</label>
+          <input type="text" name="name" class="form-control" required placeholder="e.g. RGB Mechanical Keyboard TKL">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Sell Price *</label>
+          <div class="input-group"><span class="input-group-text bg-transparent text-white border-end-0">$</span>
+          <input type="number" name="price" class="form-control border-start-0" required min="0.01" step="0.01" placeholder="49.99"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Cost Price</label>
+          <div class="input-group"><span class="input-group-text bg-transparent text-white border-end-0">$</span>
+          <input type="number" name="cost" class="form-control border-start-0" min="0" step="0.01" placeholder="22.00"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Category</label>
+          <input type="text" name="category" class="form-control" placeholder="Keyboards">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Stock</label>
+          <input type="number" name="stock" class="form-control" value="99" min="0">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Image URL</label>
+          <input type="url" name="image_url" class="form-control" placeholder="https://...">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">CJ Product ID (optional)</label>
+          <input type="text" name="cj_pid" class="form-control" placeholder="For auto-fulfillment">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Description</label>
+          <textarea name="description" class="form-control" rows="3" placeholder="Product description..."></textarea>
+        </div>
+      </div>
+      <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary px-4">Add Product</button>
+        <a href="/admin/products" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

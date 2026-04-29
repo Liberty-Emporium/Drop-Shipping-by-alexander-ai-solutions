@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Admin Login — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+  <div class="card" style="width:100%;max-width:400px;">
+    <div class="card-header text-center py-3">
+      <h5 class="mb-0"><i class="bi bi-shield-lock text-primary"></i> Admin Login</h5>
+    </div>
+    <div class="card-body p-4">
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" required autofocus>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <input type="password" id="pw" name="password" class="form-control" required>
+            <button class="btn btn-outline-secondary" type="button"
+                    onclick="var e=document.getElementById('pw'); e.type=e.type==='password'?'text':'password'; this.textContent=e.type==='password'?'👁️':'🙈'">👁️</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 btn-lg">Sign In</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

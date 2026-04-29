@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Order Confirmed — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="container py-5 text-center" style="max-width:600px;">
+  <div class="mb-4">
+    <i class="bi bi-check-circle-fill text-success" style="font-size:4rem;"></i>
+  </div>
+  <h2 class="fw-bold mb-2">Order Placed! 🎉</h2>
+  <p class="text-muted mb-4">Thank you, {{ order.customer_name.split()[0] }}! Your order is confirmed.</p>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 text-start">
+        <div class="col-6">
+          <small class="text-muted d-block">Order Number</small>
+          <strong style="color:var(--primary);">{{ order.order_num }}</strong>
+        </div>
+        <div class="col-6">
+          <small class="text-muted d-block">Status</small>
+          <span class="badge bg-warning text-dark">{{ order.status.replace('_',' ').title() }}</span>
+        </div>
+        <div class="col-6">
+          <small class="text-muted d-block">Total</small>
+          <strong>${{ '%.2f'|format(order.total) }}</strong>
+        </div>
+        <div class="col-6">
+          <small class="text-muted d-block">Email</small>
+          <small>{{ order.customer_email }}</small>
+        </div>
+        {% if order.tracking_number %}
+        <div class="col-12">
+          <small class="text-muted d-block">Tracking</small>
+          <strong class="text-success">{{ order.tracking_number }}</strong>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <h6 class="fw-bold mb-3">Items Ordered</h6>
+  <div class="card mb-4">
+    <div class="card-body p-0">
+      {% for item in items %}
+      <div class="d-flex align-items-center gap-2 p-3 border-bottom" style="border-color:var(--border)!important;">
+        {% if item.image_url %}
+        <img src="{{ item.image_url }}" width="45" height="45" style="object-fit:cover;border-radius:6px;">
+        {% endif %}
+        <div class="flex-grow-1 text-start">
+          <small>{{ item.name }}</small><br>
+          <small class="text-muted">Qty: {{ item.quantity }}</small>
+        </div>
+        <small class="fw-bold">${{ '%.2f'|format(item.price * item.quantity) }}</small>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <p class="text-muted small mb-4">
+    A confirmation will be sent to <strong>{{ order.customer_email }}</strong> once your order ships.
+  </p>
+
+  <a href="/shop" class="btn btn-primary px-5">Continue Shopping</a>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'admin/base.html' %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-4"><i class="bi bi-gear text-primary"></i> Settings</h3>
+
+<form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+<!-- CJ Dropshipping -->
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center gap-2">
+    <strong>CJ Dropshipping API</strong>
+    {% if cj_key_set %}
+    <span class="badge bg-success">✅ Connected</span>
+    {% else %}
+    <span class="badge bg-warning text-dark">⚠️ Not configured</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% if cj_key_set %}
+    <p class="text-muted mb-3">Key active: <code>{{ cj_key_preview }}</code> — Leave blank to keep current key.</p>
+    {% else %}
+    <div class="alert alert-warning py-2 mb-3">
+      <i class="bi bi-exclamation-triangle"></i>
+      Add your CJ API key to enable <strong>product import</strong> and <strong>auto-fulfillment</strong>.
+      Get it at: <a href="https://app.cjdropshipping.com" target="_blank">app.cjdropshipping.com</a> → Settings → API
+    </div>
+    {% endif %}
+    <label class="form-label fw-semibold">CJ API Key</label>
+    <div class="input-group">
+      <input type="password" id="cj_key" name="cj_api_key" class="form-control"
+             placeholder="Paste your CJ API key here...">
+      <button class="btn btn-outline-secondary" type="button"
+              onclick="var e=document.getElementById('cj_key'); e.type=e.type==='password'?'text':'password'; this.textContent=e.type==='password'?'👁️':'🙈'">👁️</button>
+    </div>
+    <small class="text-muted">Once set, you can search and import products from the CJ catalog.</small>
+
+    <div class="mt-3">
+      <label class="form-label fw-semibold">Default Markup %</label>
+      <input type="number" name="markup_percent" class="form-control" style="max-width:150px;"
+             value="{{ get_setting('markup_percent', '50') }}" min="10" max="500" step="5">
+      <small class="text-muted">Applied when importing products. 50% = buy at $10, sell at $15.</small>
+    </div>
+  </div>
+</div>
+
+<!-- Stripe -->
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center gap-2">
+    <strong>Stripe Payments</strong>
+    {% if stripe_secret_set and stripe_pub_set %}
+    <span class="badge bg-success">✅ Connected</span>
+    {% else %}
+    <span class="badge bg-secondary">Not configured</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">Get keys at <a href="https://dashboard.stripe.com/apikeys" target="_blank">dashboard.stripe.com/apikeys</a></p>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Secret Key</label>
+        <div class="input-group">
+          <input type="password" id="sk" name="stripe_secret_key" class="form-control"
+                 placeholder="{% if stripe_secret_set %}sk_•••• (set){% else %}sk_live_...{% endif %}">
+          <button class="btn btn-outline-secondary" type="button"
+                  onclick="var e=document.getElementById('sk'); e.type=e.type==='password'?'text':'password'; this.textContent=e.type==='password'?'👁️':'🙈'">👁️</button>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Publishable Key</label>
+        <div class="input-group">
+          <input type="password" id="pk" name="stripe_publishable_key" class="form-control"
+                 placeholder="{% if stripe_pub_set %}pk_•••• (set){% else %}pk_live_...{% endif %}">
+          <button class="btn btn-outline-secondary" type="button"
+                  onclick="var e=document.getElementById('pk'); e.type=e.type==='password'?'text':'password'; this.textContent=e.type==='password'?'👁️':'🙈'">👁️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OpenRouter AI -->
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center gap-2">
+    <strong>OpenRouter AI</strong>
+    {% if openrouter_set %}
+    <span class="badge bg-success">✅ Connected</span>
+    {% else %}
+    <span class="badge bg-secondary">Not configured</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">Powers AI product descriptions and business insights.</p>
+    <label class="form-label">OpenRouter API Key</label>
+    <div class="input-group">
+      <input type="password" id="or" name="openrouter_key" class="form-control"
+             placeholder="{% if openrouter_set %}sk-or-•••• (set){% else %}sk-or-v1-...{% endif %}">
+      <button class="btn btn-outline-secondary" type="button"
+              onclick="var e=document.getElementById('or'); e.type=e.type==='password'?'text':'password'; this.textContent=e.type==='password'?'👁️':'🙈'">👁️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Store Info -->
+<div class="card mb-4">
+  <div class="card-header"><strong>Store Information</strong></div>
+  <div class="card-body row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Store Name</label>
+      <input type="text" name="store_name" class="form-control" value="{{ store_name }}">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Support Email</label>
+      <input type="email" name="support_email" class="form-control" value="{{ support_email }}">
+    </div>
+  </div>
+</div>
+
+<button type="submit" class="btn btn-primary btn-lg px-5">
+  <i class="bi bi-floppy"></i> Save All Settings
+</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+// Allow get_setting in template context
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'admin/base.html' %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0">Orders</h3>
+  <button class="btn btn-sm btn-outline-secondary" onclick="syncAllTracking()">
+    <i class="bi bi-arrow-repeat"></i> Sync Tracking
+  </button>
+</div>
+
+<!-- Status filter -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+  {% for s in ['', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'needs_review'] %}
+  <a href="/admin/orders{% if s %}?status={{ s }}{% endif %}"
+     class="btn btn-sm {% if current_status == s %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+    {% if s %}{{ s.replace('_',' ').title() }}{% else %}All{% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+{% if orders %}
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr>
+          <th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th></th>
+        </tr></thead>
+        <tbody>
+          {% for o in orders %}
+          <tr>
+            <td><code style="color:var(--primary);">{{ o.order_num }}</code></td>
+            <td>
+              <strong>{{ o.customer_name }}</strong><br>
+              <small class="text-muted">{{ o.customer_email }}</small>
+            </td>
+            <td><small>{{ o.items|from_json|length if o.items else 0 }} item(s)</small></td>
+            <td><strong>${{ '%.2f'|format(o.total) }}</strong></td>
+            <td><span class="badge badge-status-{{ o.status }}">{{ o.status.replace('_',' ').title() }}</span></td>
+            <td><small class="text-muted">{{ o.created_at[:10] }}</small></td>
+            <td><a href="/admin/orders/{{ o.id }}" class="btn btn-sm btn-outline-secondary">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-bag fs-1 text-muted mb-3 d-block"></i>
+  <h4 class="text-muted">No orders yet</h4>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+async function syncAllTracking() {
+  const btn = event.target.closest('button');
+  btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Syncing...';
+  const r = await fetch('/api/orders/sync-tracking', {method:'POST', headers:{'Content-Type':'application/json'}});
+  const d = await r.json();
+  btn.disabled = false; btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Sync Tracking';
+  alert(`✅ ${d.updated} order(s) updated.`);
+  if (d.updated > 0) window.location.reload();
+}
+</script>
+{% endblock %}

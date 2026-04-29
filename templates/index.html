@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}{{ app_name }} — AI-Curated Tech Gear{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container text-center py-5">
+    <div class="mb-3">
+      <span class="badge bg-primary px-3 py-2 rounded-pill">
+        <i class="bi bi-stars"></i> AI-Curated Products
+      </span>
+    </div>
+    <h1 class="hero-title glow mb-3">
+      Tech Gear for<br><span style="color: var(--primary);">Builders & Developers</span>
+    </h1>
+    <p class="hero-subtitle mb-4">
+      Keyboards, peripherals, desk setups, and tools — hand-picked by AI for the people who build the future.
+    </p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="/shop" class="btn btn-primary btn-lg px-5">
+        <i class="bi bi-grid3x3-gap"></i> Shop Now
+      </a>
+      <a href="/shop?category=Keyboards" class="btn btn-outline-light btn-lg px-4">
+        <i class="bi bi-keyboard"></i> Keyboards
+      </a>
+    </div>
+    <!-- Trust badges -->
+    <div class="mt-5 d-flex gap-4 justify-content-center flex-wrap" style="color:#888;">
+      <span><i class="bi bi-shield-check text-primary"></i> Secure Checkout</span>
+      <span><i class="bi bi-truck text-primary"></i> Fast Shipping</span>
+      <span><i class="bi bi-arrow-counterclockwise text-primary"></i> Easy Returns</span>
+      <span><i class="bi bi-robot text-primary"></i> AI-Powered</span>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+{% if categories %}
+<section class="container py-4">
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="/shop" class="btn btn-sm btn-outline-primary">All</a>
+    {% for cat in categories %}
+    <a href="/shop?category={{ cat.category }}" class="btn btn-sm btn-outline-secondary">
+      {{ cat.category }}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Featured Products -->
+<section class="container pb-5">
+  <h2 class="mb-4 fw-bold">
+    <i class="bi bi-fire text-primary"></i> Featured Products
+  </h2>
+  {% if products %}
+  <div class="row g-4">
+    {% for p in products %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="card product-card h-100" onclick="window.location='/product/{{ p.id }}'">
+        {% if p.image_url %}
+        <img src="{{ p.image_url }}" class="product-img w-100" alt="{{ p.name }}" loading="lazy">
+        {% else %}
+        <div class="product-img w-100 d-flex align-items-center justify-content-center">
+          <i class="bi bi-cpu fs-1 text-muted"></i>
+        </div>
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          {% if p.category %}
+          <small class="text-primary mb-1">{{ p.category }}</small>
+          {% endif %}
+          <h6 class="mb-2 flex-grow-1">{{ p.name }}</h6>
+          <div class="d-flex align-items-center justify-content-between mt-auto">
+            <span class="fw-bold fs-5" style="color:var(--primary);">${{ '%.2f'|format(p.price) }}</span>
+            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); addToCart({{ p.id }})">
+              <i class="bi bi-bag-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-4">
+    <a href="/shop" class="btn btn-outline-primary btn-lg px-5">View All Products</a>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-cpu fs-1 text-muted mb-3 d-block"></i>
+    <h4 class="text-muted">Products coming soon</h4>
+    <p class="text-muted">We're loading our tech catalog. Check back shortly!</p>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Features Section -->
+<section style="background: var(--card-bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container py-5">
+    <div class="row g-4 text-center">
+      <div class="col-md-3">
+        <i class="bi bi-robot fs-2 text-primary mb-3 d-block"></i>
+        <h6 class="fw-bold">AI-Curated</h6>
+        <small class="text-muted">Every product hand-selected for developers and builders</small>
+      </div>
+      <div class="col-md-3">
+        <i class="bi bi-lightning-charge fs-2 text-primary mb-3 d-block"></i>
+        <h6 class="fw-bold">Fast Fulfillment</h6>
+        <small class="text-muted">Orders automatically processed and shipped to your door</small>
+      </div>
+      <div class="col-md-3">
+        <i class="bi bi-shield-lock fs-2 text-primary mb-3 d-block"></i>
+        <h6 class="fw-bold">Secure Payments</h6>
+        <small class="text-muted">Stripe-powered checkout — your data is always safe</small>
+      </div>
+      <div class="col-md-3">
+        <i class="bi bi-headset fs-2 text-primary mb-3 d-block"></i>
+        <h6 class="fw-bold">Real Support</h6>
+        <small class="text-muted">AI + human support to resolve any issue fast</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

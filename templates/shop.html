@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Shop — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <h2 class="mb-0 fw-bold">
+      {% if search %}<i class="bi bi-search"></i> "{{ search }}"
+      {% elif current_category %}{{ current_category }}
+      {% else %}<i class="bi bi-grid3x3-gap text-primary"></i> All Products
+      {% endif %}
+    </h2>
+    <form class="d-flex gap-2" method="GET">
+      <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Search tech gear...">
+      <button class="btn btn-primary"><i class="bi bi-search"></i></button>
+    </form>
+  </div>
+
+  <!-- Category Pills -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="/shop" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-secondary{% %}">All</a>
+    {% for cat in categories %}
+    <a href="/shop?category={{ cat.category }}"
+       class="btn btn-sm {% if current_category == cat.category %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      {{ cat.category }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if products %}
+  <div class="row g-4">
+    {% for p in products %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="card product-card h-100" onclick="window.location='/product/{{ p.id }}'">
+        {% if p.image_url %}
+        <img src="{{ p.image_url }}" class="product-img w-100" alt="{{ p.name }}" loading="lazy">
+        {% else %}
+        <div class="product-img w-100 d-flex align-items-center justify-content-center">
+          <i class="bi bi-cpu fs-1 text-muted"></i>
+        </div>
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          {% if p.category %}<small class="text-primary mb-1">{{ p.category }}</small>{% endif %}
+          <h6 class="flex-grow-1 mb-2">{{ p.name }}</h6>
+          <div class="d-flex align-items-center justify-content-between mt-auto">
+            <span class="fw-bold fs-5" style="color:var(--primary);">${{ '%.2f'|format(p.price) }}</span>
+            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); addToCart({{ p.id }})">
+              <i class="bi bi-bag-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+    <h4 class="text-muted">No products found</h4>
+    <a href="/shop" class="btn btn-outline-primary mt-3">Clear filters</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
