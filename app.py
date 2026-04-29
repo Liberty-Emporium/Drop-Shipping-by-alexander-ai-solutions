@@ -947,6 +947,73 @@ Be concise, direct, and practical. No fluff. Use bullet points when listing mult
         return jsonify({'reply': f'Error connecting to AI: {str(e)}'}), 200
 
 
+# ── AI Description Fill ─────────────────────────────────────────────────────────
+@app.route('/api/ai/fill-description', methods=['POST'])
+@login_required
+def api_ai_fill_description():
+    """Use AI to write a product description from name + category."""
+    data     = request.get_json() or {}
+    name     = data.get('name', '').strip()
+    category = data.get('category', '').strip()
+    current  = data.get('current_description', '').strip()
+
+    if not name:
+        return jsonify({'error': 'Product name is required'}), 400
+
+    api_key = get_setting('openrouter_key')
+    if not api_key:
+        return jsonify({'error': 'OpenRouter key not configured. Go to Settings → OpenRouter AI to add your key.'}), 400
+
+    store_name = get_setting('store_name', 'Alexander AI Solutions')
+    context    = f'Category: {category}' if category else ''
+    existing   = f'\n\nExisting description to improve: {current}' if current else ''
+
+    prompt = f"""Write a compelling product description for this tech dropshipping store item.
+
+Product: {name}
+{context}{existing}
+
+Requirements:
+- 2-3 short paragraphs or bullet points
+- Highlight key features and benefits
+- Mention who it's for (developers, builders, gamers, home office, etc.)
+- Keep it punchy and sales-focused
+- No fluff, no fake reviews, no made-up specs
+- Max 120 words
+
+Write ONLY the description, no intro text."""
+
+    try:
+        resp = requests.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': request.host_url,
+                'X-Title': store_name,
+            },
+            json={
+                'model': get_setting('ai_model', 'google/gemini-2.0-flash-001'),
+                'messages': [{'role': 'user', 'content': prompt}],
+                'max_tokens': 256,
+                'temperature': 0.75,
+            },
+            timeout=20
+        )
+        result = resp.json()
+        if result.get('choices'):
+            description = result['choices'][0]['message']['content'].strip()
+            return jsonify({'description': description})
+        elif result.get('error'):
+            return jsonify({'error': result['error'].get('message', 'AI error')}), 500
+        else:
+            return jsonify({'error': 'No response from AI'}), 500
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'AI request timed out. Try again.'}), 504
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ── Order tracking status update from CJ ──────────────────────────────────────
 @app.route('/api/orders/sync-tracking', methods=['POST'])
 @login_required

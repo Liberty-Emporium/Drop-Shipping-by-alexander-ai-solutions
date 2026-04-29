@@ -39,8 +39,14 @@
           <input type="text" name="cj_pid" class="form-control" placeholder="For auto-fulfillment">
         </div>
         <div class="col-12">
-          <label class="form-label fw-semibold">Description</label>
-          <textarea name="description" class="form-control" rows="3" placeholder="Product description..."></textarea>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label fw-semibold mb-0">Description</label>
+            <button type="button" id="ai-fill-btn" onclick="aiFillDescription()" class="btn btn-sm" style="background:linear-gradient(135deg,#7c3aed,#06b6d4);color:white;border:none;padding:0.3rem 0.85rem;border-radius:8px;font-size:0.8rem;font-weight:600;">
+              <span id="ai-fill-icon">✨</span> <span id="ai-fill-label">AI Fill</span>
+            </button>
+          </div>
+          <textarea name="description" id="description" class="form-control" rows="3" placeholder="Product description..."></textarea>
+          <div id="ai-fill-status" style="font-size:0.78rem;color:#a89dff;margin-top:0.3rem;display:none;"></div>
         </div>
       </div>
       <div class="mt-4 d-flex gap-2">
@@ -50,4 +56,49 @@
     </form>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function aiFillDescription() {
+  const name = document.querySelector('input[name="name"]').value.trim();
+  const category = document.querySelector('input[name="category"]').value.trim();
+  const descBox = document.getElementById('description');
+  const btn = document.getElementById('ai-fill-btn');
+  const label = document.getElementById('ai-fill-label');
+  const icon = document.getElementById('ai-fill-icon');
+  const status = document.getElementById('ai-fill-status');
+
+  if (!name) { alert('Enter a product name first.'); return; }
+
+  btn.disabled = true;
+  icon.textContent = '⏳';
+  label.textContent = 'Writing...';
+  status.style.display = 'none';
+
+  try {
+    const r = await fetch('/api/ai/fill-description', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, category, current_description: descBox.value.trim() })
+    });
+    const d = await r.json();
+    if (d.description) {
+      descBox.value = d.description;
+      icon.textContent = '✅';
+      label.textContent = 'Done!';
+      status.textContent = '✨ AI wrote this description — edit it however you like.';
+      status.style.display = 'block';
+      setTimeout(() => { icon.textContent = '✨'; label.textContent = 'AI Fill'; btn.disabled = false; }, 2500);
+    } else {
+      throw new Error(d.error || 'No description returned');
+    }
+  } catch(e) {
+    icon.textContent = '⚠️';
+    label.textContent = 'Failed';
+    status.textContent = '⚠️ ' + e.message;
+    status.style.display = 'block';
+    setTimeout(() => { icon.textContent = '✨'; label.textContent = 'AI Fill'; btn.disabled = false; }, 3000);
+  }
+}
+</script>
 {% endblock %}
