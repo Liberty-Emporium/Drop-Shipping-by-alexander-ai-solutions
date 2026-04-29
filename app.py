@@ -806,6 +806,84 @@ def admin_import():
     cj_configured = bool(get_setting('cj_api_key'))
     return render_template('admin/import.html', markup=markup, cj_configured=cj_configured)
 
+# ── AI Chat API ──────────────────────────────────────────────────────────────────
+@app.route('/api/bot/chat', methods=['POST'])
+@login_required
+def api_bot_chat():
+    """AI business assistant — powered by OpenRouter."""
+    data    = request.get_json() or {}
+    message = data.get('message', '').strip()
+    history = data.get('history', [])
+
+    if not message:
+        return jsonify({'error': 'No message provided'}), 400
+
+    api_key = get_setting('openrouter_key')
+    if not api_key:
+        return jsonify({'reply': '⚠️ OpenRouter key not configured. Go to Settings → OpenRouter AI and add your key to enable the AI assistant.'})  
+
+    # Build store context for system prompt
+    db = get_db()
+    total_products = db.execute('SELECT COUNT(*) as c FROM products WHERE active=1').fetchone()['c']
+    total_orders   = db.execute('SELECT COUNT(*) as c FROM orders').fetchone()['c']
+    revenue        = db.execute('SELECT SUM(total) as s FROM orders WHERE status!="cancelled"').fetchone()['s'] or 0
+    pending        = db.execute('SELECT COUNT(*) as c FROM orders WHERE status="pending"').fetchone()['c']
+    store_name     = get_setting('store_name', 'Alexander AI Solutions')
+    categories     = db.execute('SELECT DISTINCT category FROM products WHERE active=1 AND category IS NOT NULL').fetchall()
+    cat_list       = ', '.join([r['category'] for r in categories]) if categories else 'mixed tech'
+
+    system_prompt = f"""You are an AI business assistant for {store_name}, a tech dropshipping store.
+
+Current store stats:
+- Products: {total_products} active
+- Total orders: {total_orders}
+- Revenue: ${revenue:.2f}
+- Pending orders: {pending}
+- Categories: {cat_list}
+
+Your role: help the owner grow the business. Give specific, actionable advice.
+Focus on: product sourcing, pricing strategy, marketing, operations, customer service.
+Be concise, direct, and practical. No fluff. Use bullet points when listing multiple items."""
+
+    # Build messages
+    messages = [{'role': 'system', 'content': system_prompt}]
+    for h in history[-10:]:  # last 10 messages for context
+        if h.get('role') in ('user', 'assistant') and h.get('content'):
+            messages.append({'role': h['role'], 'content': h['content']})
+    messages.append({'role': 'user', 'content': message})
+
+    try:
+        resp = requests.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': request.host_url,
+                'X-Title': store_name,
+            },
+            json={
+                'model': get_setting('ai_model', 'google/gemini-2.0-flash-001'),
+                'messages': messages,
+                'max_tokens': 1024,
+                'temperature': 0.7,
+            },
+            timeout=30
+        )
+        result = resp.json()
+        if result.get('choices'):
+            reply = result['choices'][0]['message']['content']
+            return jsonify({'reply': reply})
+        elif result.get('error'):
+            return jsonify({'reply': f"AI error: {result['error'].get('message', 'Unknown error')}"})
+        else:
+            return jsonify({'reply': 'No response from AI. Check your OpenRouter key.'})
+    except requests.exceptions.Timeout:
+        return jsonify({'reply': 'AI request timed out. Try again.'}), 200
+    except Exception as e:
+        app.logger.error(f'AI chat error: {e}')
+        return jsonify({'reply': f'Error connecting to AI: {str(e)}'}), 200
+
+
 # ── Order tracking status update from CJ ──────────────────────────────────────
 @app.route('/api/orders/sync-tracking', methods=['POST'])
 @login_required
