@@ -134,7 +134,7 @@
     <a href="/shop">Shop</a>
     {% if product.category %}
     <span class="breadcrumb-sep">›</span>
-    <a href="/shop?category={{ product.category }}">{{ product.category }}</a>
+    <a href="/shop?category={{ product.category | urlencode }}">{{ product.category }}</a>
     {% endif %}
     <span class="breadcrumb-sep">›</span>
     <span style="color:var(--text);">{{ product.name[:45] }}{% if product.name|length > 45 %}...{% endif %}</span>

@@ -38,7 +38,7 @@
       <span style="color:var(--muted);font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-right:0.25rem;">Filter:</span>
       <a href="/" class="cat-pill active" id="cat-all">All</a>
       {% for cat in categories %}
-      <a href="/shop?category={{ cat.category }}" class="cat-pill">{{ cat.category }}</a>
+      <a href="/shop?category={{ cat.category | urlencode }}" class="cat-pill">{{ cat.category }}</a>
       {% endfor %}
     </div>
   </div>

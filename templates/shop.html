@@ -41,7 +41,7 @@
   <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:2rem;">
     <a href="/shop" class="cat-pill {% if not current_category %}active{% endif %}">All</a>
     {% for cat in categories %}
-    <a href="/shop?category={{ cat.category }}" class="cat-pill {% if current_category == cat.category %}active{% endif %}">
+    <a href="/shop?category={{ cat.category | urlencode }}" class="cat-pill {% if current_category == cat.category %}active{% endif %}">
       {{ cat.category }}
     </a>
     {% endfor %}

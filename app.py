@@ -187,6 +187,9 @@ app.jinja_env.globals['csrf_token'] = get_csrf_token
 app.jinja_env.globals['get_setting'] = get_setting
 app.jinja_env.filters['from_json'] = lambda s: json.loads(s) if s else []
 
+from urllib.parse import quote as _url_quote
+app.jinja_env.filters['urlencode'] = lambda s: _url_quote(str(s), safe='')
+
 @app.before_request
 def csrf_protect():
     if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
