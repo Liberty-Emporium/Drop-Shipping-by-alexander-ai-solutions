@@ -282,16 +282,71 @@ def cj_get_order_status(cj_order_id):
     return cj_request('get', 'shopping/order/getOrderDetail',
                       params={'orderId': cj_order_id})
 
+
+# ── Tech-only category filter ─────────────────────────────────────────────────
+# Only these category keywords are allowed in the store.
+# Any product whose category does NOT contain one of these words is hidden.
+TECH_KEYWORDS = [
+    'computer', 'laptop', 'tablet', 'keyboard', 'mouse', 'monitor', 'screen',
+    'phone', 'mobile', 'smartphone',
+    'cable', 'charger', 'charging', 'usb', 'hdmi', 'adapter', 'hub',
+    'headphone', 'earphone', 'earbuds', 'speaker', 'audio', 'microphone',
+    'camera', 'webcam', 'projector',
+    'hard drive', 'external hard', 'ssd', 'flash', 'memory', 'storage',
+    'gpu', 'cpu', 'processor', 'graphics',
+    'printer', 'scanner', 'router', 'network', 'wifi', 'bluetooth',
+    'smart home', 'smart device', 'surveillance',
+    'gaming', 'controller', 'console',
+    'electronic', 'tech', 'digital',
+    'power bank', 'battery',
+    'drone', 'robot',
+    'amplifier', 'home audio', 'home video', 'home electronic',
+]
+
+def is_tech_category(category: str) -> bool:
+    """Return True if category is tech/electronics-related."""
+    if not category:
+        return False
+    cat_lower = category.lower()
+    return any(kw in cat_lower for kw in TECH_KEYWORDS)
+
+
+def _tech_filter_sql():
+    """Return a SQL WHERE fragment + params that filters for tech categories only."""
+    clauses = ' OR '.join('category LIKE ?' for _ in TECH_KEYWORDS)
+    params  = [f'%{kw}%' for kw in TECH_KEYWORDS]
+    return f'({clauses})', params
+
+
+def deactivate_non_tech_products():
+    """One-time cleanup: set active=0 for all non-tech products in the DB."""
+    try:
+        db = sqlite3.connect(DB_FILE)
+        db.row_factory = sqlite3.Row
+        rows = db.execute('SELECT id, category FROM products WHERE active=1').fetchall()
+        non_tech_ids = [r['id'] for r in rows if not is_tech_category(r['category'])]
+        if non_tech_ids:
+            placeholders = ','.join('?' for _ in non_tech_ids)
+            db.execute(f'UPDATE products SET active=0 WHERE id IN ({placeholders})', non_tech_ids)
+            db.commit()
+            print(f'[tech-filter] Deactivated {len(non_tech_ids)} non-tech product(s)')
+        db.close()
+    except Exception as e:
+        print(f'[tech-filter] Cleanup error: {e}')
+
+deactivate_non_tech_products()
+
 # ── Routes — Public ───────────────────────────────────────────────────────────
 @app.route('/')
 def index():
     db = get_db()
+    tech_sql, tech_params = _tech_filter_sql()
     featured = db.execute(
-        'SELECT * FROM products WHERE active=1 ORDER BY created_at DESC LIMIT 12'
+        f'SELECT * FROM products WHERE active=1 AND {tech_sql} ORDER BY created_at DESC LIMIT 12',
+        tech_params
     ).fetchall()
-    categories = db.execute(
-        'SELECT DISTINCT category FROM products WHERE active=1 AND category IS NOT NULL'
-    ).fetchall()
+    all_cats   = db.execute('SELECT DISTINCT category FROM products WHERE active=1 AND category IS NOT NULL').fetchall()
+    categories = [c for c in all_cats if is_tech_category(c['category'])]
     return render_template('index.html', products=featured, categories=categories)
 
 @app.route('/shop')
@@ -299,8 +354,9 @@ def shop():
     db = get_db()
     category = request.args.get('category', '')
     search   = request.args.get('q', '')
-    query    = 'SELECT * FROM products WHERE active=1'
-    params   = []
+    tech_sql, tech_params = _tech_filter_sql()
+    query  = f'SELECT * FROM products WHERE active=1 AND {tech_sql}'
+    params = list(tech_params)
     if category:
         query += ' AND category=?'; params.append(category)
     if search:
@@ -308,7 +364,9 @@ def shop():
         params += [f'%{search}%', f'%{search}%']
     query += ' ORDER BY created_at DESC'
     products   = db.execute(query, params).fetchall()
-    categories = db.execute('SELECT DISTINCT category FROM products WHERE active=1 AND category IS NOT NULL').fetchall()
+    # Only show tech categories in the filter bar
+    all_cats   = db.execute('SELECT DISTINCT category FROM products WHERE active=1 AND category IS NOT NULL').fetchall()
+    categories = [c for c in all_cats if is_tech_category(c['category'])]
     return render_template('shop.html', products=products, categories=categories,
                            current_category=category, search=search)
 
@@ -783,6 +841,11 @@ def api_cj_import():
     if existing:
         return jsonify({'error': 'Product already imported', 'product_id': existing['id']}), 409
 
+    # Block non-tech products at import time
+    import_category = data.get('categoryName', data.get('category', 'Tech'))
+    if not is_tech_category(import_category):
+        return jsonify({'error': f'Category "{import_category}" is not tech/electronics. This store only sells computer and electronics products.'}), 422
+
     db.execute('''INSERT INTO products (cj_pid, name, description, price, cost, image_url, category, stock)
                   VALUES (?,?,?,?,?,?,?,?)''', (
         data.get('pid',''),
@@ -791,7 +854,7 @@ def api_cj_import():
         price,
         cost,
         data.get('productImage', data.get('image_url','')),
-        data.get('categoryName', data.get('category', 'Tech')),
+        import_category,
         99
     ))
     db.commit()
