@@ -75,6 +75,16 @@
                   onclick="var e=document.getElementById('pk'); e.type=e.type==='password'?'text':'password'; this.textContent=e.type==='password'?'👁️':'🙈'">👁️</button>
         </div>
       </div>
+      <div class="col-12">
+        <label class="form-label">Webhook Secret <span class="text-muted small">(optional but recommended)</span></label>
+        <div class="input-group">
+          <input type="password" id="whsec" name="stripe_webhook_secret" class="form-control"
+                 placeholder="{% if stripe_wh_set %}whsec_•••• (set){% else %}whsec_... (from Stripe Dashboard → Webhooks){% endif %}">
+          <button class="btn btn-outline-secondary" type="button"
+                  onclick="var e=document.getElementById('whsec'); e.type=e.type==='password'?'text':'password'; this.textContent=e.type==='password'?'👁️':'🙈'">👁️</button>
+        </div>
+        <div class="text-muted small mt-1">Webhook URL: <code>{{ request.host_url }}stripe/webhook</code> — add this in Stripe Dashboard → Webhooks</div>
+      </div>
     </div>
   </div>
 </div>

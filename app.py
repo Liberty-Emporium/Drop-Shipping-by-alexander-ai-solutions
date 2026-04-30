@@ -9,6 +9,7 @@ from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, jsonify, g)
 import requests
 import bcrypt as _bcrypt
+import stripe as _stripe
 
 app = Flask(__name__)
 
@@ -53,6 +54,9 @@ ADMIN_USER  = os.environ.get('ADMIN_USER', 'admin')
 ADMIN_PASS  = os.environ.get('ADMIN_PASSWORD', 'admin1234')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'jay@alexanderaisolutions.com')
 APP_NAME    = 'Alexander AI Solutions'
+
+# ── Stripe ────────────────────────────────────────────────────────────────────
+_stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
 # ── Database ──────────────────────────────────────────────────────────────────
 def get_db():
@@ -471,6 +475,7 @@ def checkout():
 
 @app.route('/checkout/place', methods=['POST'])
 def place_order():
+    """Step 1: Collect shipping info, create pending order, redirect to Stripe."""
     cart_items = _get_cart()
     if not cart_items:
         return redirect(url_for('cart'))
@@ -498,19 +503,134 @@ def place_order():
         (order_num, customer_name, customer_email, customer_address, items, subtotal, total, status)
         VALUES (?,?,?,?,?,?,?,?)''',
         (order_num, name, email, full_address, json.dumps(cart_items),
-         subtotal, total, 'pending'))
+         subtotal, total, 'awaiting_payment'))
     db.commit()
 
-    # Clear cart
+    stripe_secret = get_setting('stripe_secret_key') or os.environ.get('STRIPE_SECRET_KEY', '')
+    if stripe_secret:
+        # ── Stripe Checkout Session ────────────────────────────────────────
+        _stripe.api_key = stripe_secret
+        base_url = request.host_url.rstrip('/')
+        line_items = []
+        for item in cart_items:
+            line_items.append({
+                'price_data': {
+                    'currency': 'usd',
+                    'unit_amount': int(round(item['price'] * 100)),
+                    'product_data': {
+                        'name': item['name'][:127],
+                        'images': [item['image_url']] if item.get('image_url') else [],
+                    },
+                },
+                'quantity': item['quantity'],
+            })
+        if shipping > 0:
+            line_items.append({
+                'price_data': {
+                    'currency': 'usd',
+                    'unit_amount': int(round(shipping * 100)),
+                    'product_data': {'name': 'Shipping'},
+                },
+                'quantity': 1,
+            })
+        try:
+            checkout_session = _stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=line_items,
+                mode='payment',
+                customer_email=email,
+                shipping_address_collection={'allowed_countries': ['US','CA','GB','AU','DE','FR']},
+                metadata={'order_num': order_num},
+                success_url=base_url + url_for('stripe_success') + '?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=base_url + url_for('checkout'),
+            )
+            db.execute('UPDATE orders SET stripe_session_id=? WHERE order_num=?',
+                       (checkout_session.id, order_num))
+            db.commit()
+            session['pending_order_num'] = order_num
+            return redirect(checkout_session.url, code=303)
+        except Exception as e:
+            # Stripe failed — fall through to manual order
+            db.execute("UPDATE orders SET status='pending', notes=? WHERE order_num=?",
+                       (f'Stripe error: {str(e)[:200]}', order_num))
+            db.commit()
+    else:
+        # No Stripe configured — legacy manual order flow
+        db.execute("UPDATE orders SET status='pending' WHERE order_num=?", (order_num,))
+        db.commit()
+
+    # Clear cart & auto-fulfill (manual/fallback path)
     sid = _get_session_id()
     db.execute('DELETE FROM cart WHERE session_id=?', (sid,))
     db.commit()
-
-    # Auto-fulfill via CJ if API key is set
     order_id = db.execute('SELECT id FROM orders WHERE order_num=?', (order_num,)).fetchone()['id']
     _auto_fulfill_order(order_id)
-
     return redirect(url_for('order_confirmation', order_num=order_num))
+
+
+@app.route('/stripe/success')
+def stripe_success():
+    """Stripe redirects here after successful payment."""
+    stripe_session_id = request.args.get('session_id', '')
+    order_num = session.pop('pending_order_num', None)
+
+    if stripe_session_id:
+        stripe_secret = get_setting('stripe_secret_key') or os.environ.get('STRIPE_SECRET_KEY', '')
+        _stripe.api_key = stripe_secret
+        try:
+            cs = _stripe.checkout.Session.retrieve(stripe_session_id)
+            # Find order by session id if we lost the session cookie
+            db = get_db()
+            order = db.execute('SELECT * FROM orders WHERE stripe_session_id=?',
+                               (stripe_session_id,)).fetchone()
+            if order:
+                order_num = order['order_num']
+                if order['status'] == 'awaiting_payment':
+                    db.execute("UPDATE orders SET status='paid', updated_at=CURRENT_TIMESTAMP WHERE order_num=?",
+                               (order_num,))
+                    db.commit()
+                    # Clear cart
+                    sid = _get_session_id()
+                    db.execute('DELETE FROM cart WHERE session_id=?', (sid,))
+                    db.commit()
+                    # Auto-fulfill
+                    _auto_fulfill_order(order['id'])
+        except Exception:
+            pass
+
+    if order_num:
+        return redirect(url_for('order_confirmation', order_num=order_num))
+    return redirect(url_for('index'))
+
+
+@app.route('/stripe/webhook', methods=['POST'])
+def stripe_webhook():
+    """Stripe webhook — marks orders paid even if user closes browser."""
+    stripe_secret = get_setting('stripe_secret_key') or os.environ.get('STRIPE_SECRET_KEY', '')
+    webhook_secret = get_setting('stripe_webhook_secret') or os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+    _stripe.api_key = stripe_secret
+    payload = request.get_data()
+    sig = request.headers.get('Stripe-Signature', '')
+    try:
+        if webhook_secret:
+            event = _stripe.Webhook.construct_event(payload, sig, webhook_secret)
+        else:
+            event = json.loads(payload)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+    if event['type'] == 'checkout.session.completed':
+        cs = event['data']['object']
+        order_num = cs.get('metadata', {}).get('order_num')
+        if order_num:
+            db = get_db()
+            order = db.execute('SELECT * FROM orders WHERE order_num=?', (order_num,)).fetchone()
+            if order and order['status'] == 'awaiting_payment':
+                db.execute("UPDATE orders SET status='paid', updated_at=CURRENT_TIMESTAMP WHERE order_num=?",
+                           (order_num,))
+                db.commit()
+                _auto_fulfill_order(order['id'])
+    return jsonify({'ok': True})
 
 @app.route('/order/<order_num>')
 def order_confirmation(order_num):
@@ -772,6 +892,11 @@ def admin_settings():
             updates['stripe_publishable_key'] = stripe_pub
             set_config('stripe_publishable_key', stripe_pub)
 
+        stripe_wh = request.form.get('stripe_webhook_secret','').strip()
+        if stripe_wh:
+            updates['stripe_webhook_secret'] = stripe_wh
+            set_config('stripe_webhook_secret', stripe_wh)
+
         openrouter_key = request.form.get('openrouter_key','').strip()
         if openrouter_key:
             updates['openrouter_key'] = openrouter_key
@@ -802,13 +927,14 @@ def admin_settings():
         return '••••••••'
 
     return render_template('admin/settings.html',
-        cj_key_set     = bool(get_setting('cj_api_key')),
-        cj_key_preview = mask(get_setting('cj_api_key')),
-        stripe_secret_set = bool(get_setting('stripe_secret_key')),
-        stripe_pub_set    = bool(get_setting('stripe_publishable_key')),
-        openrouter_set = bool(get_setting('openrouter_key')),
-        store_name     = get_setting('store_name', APP_NAME),
-        support_email  = get_setting('support_email', ADMIN_EMAIL),
+        cj_key_set        = bool(get_setting('cj_api_key')),
+        cj_key_preview    = mask(get_setting('cj_api_key')),
+        stripe_secret_set = bool(get_setting('stripe_secret_key') or os.environ.get('STRIPE_SECRET_KEY')),
+        stripe_pub_set    = bool(get_setting('stripe_publishable_key') or os.environ.get('STRIPE_PUBLISHABLE_KEY')),
+        stripe_wh_set     = bool(get_setting('stripe_webhook_secret') or os.environ.get('STRIPE_WEBHOOK_SECRET')),
+        openrouter_set    = bool(get_setting('openrouter_key')),
+        store_name        = get_setting('store_name', APP_NAME),
+        support_email     = get_setting('support_email', ADMIN_EMAIL),
     )
 
 # ── CJ Product Search API (admin) ─────────────────────────────────────────────
